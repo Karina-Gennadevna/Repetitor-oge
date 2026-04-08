@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Разбор ошибок — Репетитор ОГЭ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0D0F13;
+      --surface: #13171F;
+      --surface-2: #1A1F2A;
+      --border: rgba(255,255,255,0.07);
+      --accent: #2AABB3;
+      --accent-dim: rgba(42,171,179,0.12);
+      --accent-border: rgba(42,171,179,0.3);
+      --text: #F1F5F9;
+      --text-soft: #94A3B8;
+      --text-muted: #7A8899;
+      --wrong: #E8845A;
+      --wrong-bg: rgba(232,132,90,0.08);
+      --wrong-border: rgba(232,132,90,0.25);
+      --correct: #4ABA7A;
+      --correct-bg: rgba(74,186,122,0.08);
+      --correct-border: rgba(74,186,122,0.25);
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    body {
+      max-width: 430px;
+      margin: 0 auto;
+      padding: 0 20px 48px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── Header ─── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 20px 0 16px;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+
+    .btn-back {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-soft);
+      font-size: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+      text-decoration: none;
+      transition: background .15s;
+    }
+    .btn-back:hover { background: var(--surface-2); }
+
+    .header__info { flex: 1; min-width: 0; }
+    .header__label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 2px;
+    }
+    .header__title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* ─── Intro ─── */
+    .intro {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 24px;
+      font-size: 14px;
+      color: var(--text-soft);
+      line-height: 1.6;
+    }
+
+    /* ─── Mistake cards ─── */
+    .mistakes { display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px; }
+
+    .mistake-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .mistake-card__header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .mistake-card__num {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: var(--wrong-bg);
+      border: 1px solid var(--wrong-border);
+      color: var(--wrong);
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .mistake-card__title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .mistake-card__body { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+
+    .block-wrong {
+      background: var(--wrong-bg);
+      border: 1px solid var(--wrong-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .block-correct {
+      background: var(--correct-bg);
+      border: 1px solid var(--correct-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .block__label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .block-wrong .block__label { color: var(--wrong); }
+    .block-correct .block__label { color: var(--correct); }
+
+    .block__text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+
+    .block-note {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--text-soft);
+      line-height: 1.6;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--accent);
+    }
+
+    /* ─── CTA ─── */
+    .btn-done {
+      display: block;
+      width: 100%;
+      padding: 18px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      border-radius: 16px;
+      text-decoration: none;
+      transition: background .15s;
+    }
+    .btn-done:hover { background: #23939A; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <a href="plan.html" class="btn-back">←</a>
+    <div class="header__info">
+      <div class="header__label">Теория · Математика</div>
+      <div class="header__title">Разбор типичных ошибок</div>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="intro">
+    Тема: <strong style="color:var(--text);">Координатная прямая</strong><br>
+    Разбираем 4 ошибки, которые чаще всего встречаются в этой теме на экзамене. Читай внимательно — они повторяются у большинства учеников.
+  </div>
+
+  <!-- Mistakes -->
+  <div class="mistakes">
+
+    <!-- 1 -->
+    <div class="mistake-card">
+      <div class="mistake-card__header">
+        <div class="mistake-card__num">1</div>
+        <div class="mistake-card__title">Расстояние — всегда положительное</div>
+      </div>
+      <div class="mistake-card__body">
+        <div class="block-wrong">
+          <div class="block__label">Частая ошибка</div>
+          <div class="block__text">Расстояние от A(−3) до B(7) считают как <span class="mono">−3 − 7 = −10</span> и пишут ответ <strong>−10</strong>.</div>
+        </div>
+        <div class="block-correct">
+          <div class="block__label">Как правильно</div>
+          <div class="block__text">Расстояние — это модуль разности координат: <span class="mono">|7 − (−3)| = |10| = 10</span>. Расстояние не может быть отрицательным.</div>
+        </div>
+        <div class="block-note">Запомни: расстояние = |B − A|. Порядок не важен, главное — модуль.</div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="mistake-card">
+      <div class="mistake-card__header">
+        <div class="mistake-card__num">2</div>
+        <div class="mistake-card__title">Середина отрезка — не сумма, а среднее</div>
+      </div>
+      <div class="mistake-card__body">
+        <div class="block-wrong">
+          <div class="block__label">Частая ошибка</div>
+          <div class="block__text">Середину отрезка A(2) и B(8) находят как <span class="mono">2 + 8 = 10</span> и пишут ответ <strong>10</strong>.</div>
+        </div>
+        <div class="block-correct">
+          <div class="block__label">Как правильно</div>
+          <div class="block__text">Середина — это среднее арифметическое: <span class="mono">(2 + 8) / 2 = 5</span>.</div>
+        </div>
+        <div class="block-note">Формула середины: <span class="mono">M = (A + B) / 2</span>. Работает и с отрицательными числами.</div>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="mistake-card">
+      <div class="mistake-card__header">
+        <div class="mistake-card__num">3</div>
+        <div class="mistake-card__title">Минус перед скобкой меняет знак</div>
+      </div>
+      <div class="mistake-card__body">
+        <div class="block-wrong">
+          <div class="block__label">Частая ошибка</div>
+          <div class="block__text">При вычислении <span class="mono">5 − (−3)</span> пишут <span class="mono">5 − 3 = 2</span>, забывая раскрыть скобку.</div>
+        </div>
+        <div class="block-correct">
+          <div class="block__label">Как правильно</div>
+          <div class="block__text">Минус перед скобкой меняет знак: <span class="mono">5 − (−3) = 5 + 3 = 8</span>.</div>
+        </div>
+        <div class="block-note">Два минуса дают плюс. Это правило нужно до автоматизма — оно встречается почти в каждом задании.</div>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="mistake-card">
+      <div class="mistake-card__header">
+        <div class="mistake-card__num">4</div>
+        <div class="mistake-card__title">Точка с координатой 0 — тоже точка</div>
+      </div>
+      <div class="mistake-card__body">
+        <div class="block-wrong">
+          <div class="block__label">Частая ошибка</div>
+          <div class="block__text">Когда A(0), ученик считает, что "точки нет" или пропускает её при подсчёте расстояния.</div>
+        </div>
+        <div class="block-correct">
+          <div class="block__label">Как правильно</div>
+          <div class="block__text">Нуль — это координата начала координат. Расстояние от A(0) до B(5) равно <span class="mono">|5 − 0| = 5</span>.</div>
+        </div>
+        <div class="block-note">Ноль — полноценная координата. Расстояние от нуля до точки B равно |B|.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <a href="plan.html" class="btn-done">Понятно, вернуться к плану →</a>
+
+</body>
+</html>
