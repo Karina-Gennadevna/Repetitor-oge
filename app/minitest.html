@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мини-тест — Репетитор ОГЭ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0D0F13;
+      --surface: #13171F;
+      --surface-2: #1A1F2A;
+      --border: rgba(255,255,255,0.07);
+      --accent: #2AABB3;
+      --accent-dim: rgba(42,171,179,0.12);
+      --accent-border: rgba(42,171,179,0.3);
+      --text: #F1F5F9;
+      --text-soft: #94A3B8;
+      --text-muted: #7A8899;
+      --wrong: #E8845A;
+      --wrong-bg: rgba(232,132,90,0.08);
+      --wrong-border: rgba(232,132,90,0.25);
+      --correct: #4ABA7A;
+      --correct-bg: rgba(74,186,122,0.08);
+      --correct-border: rgba(74,186,122,0.25);
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    body {
+      max-width: 430px;
+      margin: 0 auto;
+      padding: 0 20px 48px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 20px 0 16px;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+
+    .btn-back {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-soft);
+      font-size: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+      text-decoration: none;
+    }
+
+    .header__label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 2px;
+    }
+    .header__title { font-size: 16px; font-weight: 700; }
+
+    /* Progress dots */
+    .progress {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 24px;
+    }
+    .dot {
+      flex: 1;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--surface-2);
+      transition: background .3s;
+    }
+    .dot.active { background: var(--accent); }
+    .dot.done { background: var(--correct); }
+    .dot.wrong { background: var(--wrong); }
+
+    /* Question */
+    .question-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .question-num {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .question-text {
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: var(--accent);
+    }
+
+    /* Options */
+    .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 15px;
+      color: var(--text);
+      transition: border-color .15s, background .15s;
+      text-align: left;
+      width: 100%;
+    }
+    .option:hover:not(:disabled) { border-color: var(--accent-border); background: var(--accent-dim); }
+
+    .option__letter {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      background: var(--surface-2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      transition: background .15s, color .15s;
+    }
+
+    .option.correct {
+      border-color: var(--correct-border);
+      background: var(--correct-bg);
+    }
+    .option.correct .option__letter {
+      background: var(--correct);
+      color: #fff;
+    }
+    .option.wrong {
+      border-color: var(--wrong-border);
+      background: var(--wrong-bg);
+    }
+    .option.wrong .option__letter {
+      background: var(--wrong);
+      color: #fff;
+    }
+
+    /* Next button */
+    .btn-next {
+      width: 100%;
+      padding: 18px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      color: var(--text-muted);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: not-allowed;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .btn-next.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    /* Result screen */
+    .result-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 24px;
+      padding-top: 32px;
+      animation: fadeUp .4s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-icon {
+      font-size: 52px;
+      line-height: 1;
+    }
+    .result-score {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .result-label {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .result-sub {
+      font-size: 14px;
+      color: var(--text-soft);
+      line-height: 1.6;
+      max-width: 280px;
+    }
+    .btn-done {
+      display: block;
+      width: 100%;
+      padding: 18px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      border-radius: 16px;
+      text-decoration: none;
+      margin-top: 8px;
+    }
+    .btn-retry {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-soft);
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      border-radius: 14px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <a href="plan.html" class="btn-back">←</a>
+    <div>
+      <div class="header__label">Проверка · Координатная прямая</div>
+      <div class="header__title">Мини-тест</div>
+    </div>
+  </div>
+
+  <!-- Quiz -->
+  <div id="quizScreen">
+    <div class="progress" id="progress">
+      <div class="dot active" id="dot-0"></div>
+      <div class="dot" id="dot-1"></div>
+      <div class="dot" id="dot-2"></div>
+    </div>
+
+    <div class="question-card" id="questionCard">
+      <div class="question-num" id="questionNum">Вопрос 1 из 3</div>
+      <div class="question-text" id="questionText"></div>
+    </div>
+
+    <div class="options" id="options"></div>
+    <button class="btn-next" id="btnNext" onclick="next()">Далее →</button>
+  </div>
+
+  <!-- Result -->
+  <div class="result-screen" id="resultScreen">
+    <div class="result-icon" id="resultIcon"></div>
+    <div>
+      <div class="result-score" id="resultScore"></div>
+      <div class="result-label" id="resultLabel"></div>
+    </div>
+    <div class="result-sub" id="resultSub"></div>
+    <a href="plan.html" class="btn-done">Вернуться к плану →</a>
+    <button class="btn-retry" onclick="restart()">Пройти ещё раз</button>
+  </div>
+
+  <script>
+    const QUESTIONS = [
+      {
+        text: 'Найдите расстояние от точки <span class="mono">A(−3)</span> до точки <span class="mono">B(7)</span>.',
+        options: ['4', '10', '−10', '21'],
+        correct: 1
+      },
+      {
+        text: 'Найдите координату середины отрезка <span class="mono">A(2)</span> и <span class="mono">B(8)</span>.',
+        options: ['10', '3', '5', '6'],
+        correct: 2
+      },
+      {
+        text: 'Вычислите: <span class="mono">5 − (−3)</span>',
+        options: ['2', '−8', '15', '8'],
+        correct: 3
+      }
+    ];
+
+    const LETTERS = ['А', 'Б', 'В', 'Г'];
+    let current = 0;
+    let answered = false;
+    let score = 0;
+
+    function render() {
+      const q = QUESTIONS[current];
+      answered = false;
+
+      document.getElementById('questionNum').textContent = `Вопрос ${current + 1} из ${QUESTIONS.length}`;
+      document.getElementById('questionText').innerHTML = q.text;
+
+      const opts = document.getElementById('options');
+      opts.innerHTML = q.options.map((opt, i) => `
+        <button class="option" onclick="select(${i})">
+          <span class="option__letter">${LETTERS[i]}</span>
+          ${opt}
+        </button>
+      `).join('');
+
+      const btn = document.getElementById('btnNext');
+      btn.classList.remove('active');
+      btn.textContent = current === QUESTIONS.length - 1 ? 'Завершить →' : 'Далее →';
+
+      // Прогресс
+      document.querySelectorAll('.dot').forEach((d, i) => {
+        d.className = 'dot' + (i === current ? ' active' : (i < current ? ' done' : ''));
+      });
+    }
+
+    function select(idx) {
+      if (answered) return;
+      answered = true;
+
+      const q = QUESTIONS[current];
+      const isCorrect = idx === q.correct;
+      if (isCorrect) score++;
+
+      document.querySelectorAll('.option').forEach((btn, i) => {
+        btn.disabled = true;
+        if (i === q.correct) btn.classList.add('correct');
+        else if (i === idx && !isCorrect) btn.classList.add('wrong');
+      });
+
+      // Точка прогресса
+      document.getElementById(`dot-${current}`).className = 'dot ' + (isCorrect ? 'done' : 'wrong');
+
+      document.getElementById('btnNext').classList.add('active');
+    }
+
+    function next() {
+      if (!answered) return;
+      if (current < QUESTIONS.length - 1) {
+        current++;
+        render();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      document.getElementById('quizScreen').style.display = 'none';
+      const screen = document.getElementById('resultScreen');
+      screen.style.display = 'flex';
+
+      const total = QUESTIONS.length;
+      document.getElementById('resultScore').textContent = `${score}/${total}`;
+
+      let icon, label, sub;
+      if (score === total) {
+        icon = '🎉';
+        label = 'Отлично!';
+        sub = 'Все задания верно. Тема освоена — можно двигаться дальше.';
+      } else if (score >= 2) {
+        icon = '👍';
+        label = 'Хороший результат';
+        sub = 'Почти всё верно. Перечитай разбор ошибок — и будет 3 из 3.';
+      } else {
+        icon = '💪';
+        label = 'Нужно повторить';
+        sub = 'Вернись к разбору типичных ошибок — там всё объяснено.';
+      }
+
+      document.getElementById('resultIcon').textContent = icon;
+      document.getElementById('resultLabel').textContent = label;
+      document.getElementById('resultSub').textContent = sub;
+    }
+
+    function restart() {
+      current = 0;
+      score = 0;
+      document.getElementById('resultScreen').style.display = 'none';
+      document.getElementById('quizScreen').style.display = 'block';
+      render();
+    }
+
+    render();
+  </script>
+
+</body>
+</html>
