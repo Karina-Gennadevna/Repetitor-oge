@@ -1554,16 +1554,6 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="reg-email">Электронная почта</label>
-        <input type="email" id="reg-email" placeholder="masha@example.com" autocomplete="email" />
-      </div>
-
-      <div class="form-group">
-        <label for="reg-pass">Пароль</label>
-        <input type="password" id="reg-pass" placeholder="Минимум 8 символов" autocomplete="new-password" />
-      </div>
-
       <button class="btn-form" onclick="handleRegister()">Пройти пробный экзамен бесплатно →</button>
 
       <div class="reg-divider">или войди через</div>
@@ -1624,13 +1614,8 @@
   function handleRegister() {
     const name  = document.getElementById('reg-name').value.trim();
     const grade = document.getElementById('reg-grade').value;
-    const email = document.getElementById('reg-email').value.trim();
-    const pass  = document.getElementById('reg-pass').value;
-
     if (!name)  { shake('reg-name');  return; }
     if (!grade) { shake('reg-grade'); return; }
-    if (!email || !email.includes('@')) { shake('reg-email'); return; }
-    if (pass.length < 8) { shake('reg-pass'); return; }
 
     showToast(`Добро пожаловать, ${name}! Начинаем диагностику.`);
     setTimeout(() => { window.location.href = 'app/welcome.html'; }, 1200);
