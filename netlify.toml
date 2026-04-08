@@ -1,0 +1,4 @@
+[[redirects]]
+  from = "/"
+  to = "/screen-00-landing.html"
+  status = 302

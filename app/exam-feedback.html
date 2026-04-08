@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Разбор задания — Репетитор ОГЭ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0D0F13;
+      --surface: #13171F;
+      --surface-2: #1A1F2A;
+      --border: rgba(255,255,255,0.07);
+      --accent: #2AABB3;
+      --accent-dim: rgba(42, 171, 179, 0.12);
+      --text: #F1F5F9;
+      --text-muted: #7A8899;
+      --text-soft: #94A3B8;
+      --wrong-color: #E8845A;
+      --wrong-bg: rgba(232, 132, 90, 0.08);
+      --wrong-border: rgba(232, 132, 90, 0.25);
+      --correct-color: #4ABA7A;
+      --correct-bg: rgba(74, 186, 122, 0.08);
+      --correct-border: rgba(74, 186, 122, 0.25);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      min-height: 100dvh;
+      max-width: 430px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* ─── Топбар ─── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 52px 0 20px;
+      flex-shrink: 0;
+    }
+
+    .topbar__badge {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .timer-dim {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      opacity: 0.35;
+    }
+
+    .timer-dim__dot {
+      width: 5px;
+      height: 5px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    .timer-dim__time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: var(--text-soft);
+    }
+
+    /* ─── Прогресс ─── */
+    .progress-wrap {
+      margin-bottom: 24px;
+      flex-shrink: 0;
+    }
+
+    .progress-track {
+      height: 3px;
+      background: var(--surface-2);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 10%;
+      background: var(--accent);
+      border-radius: 99px;
+    }
+
+    .progress-dots {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+    }
+
+    .progress-dot {
+      flex: 1;
+      height: 3px;
+      border-radius: 99px;
+      background: var(--surface-2);
+    }
+
+    .progress-dot.done { background: var(--accent); }
+    .progress-dot.wrong { background: var(--wrong-color); }
+    .progress-dot.active { background: rgba(42, 171, 179, 0.4); }
+
+    /* ─── Главная карточка результата ─── */
+    .result-card {
+      background: var(--wrong-bg);
+      border: 1px solid var(--wrong-border);
+      border-radius: 20px;
+      padding: 24px 20px;
+      margin-bottom: 14px;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+      animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-card__status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .status-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(232, 132, 90, 0.15);
+      border: 1px solid rgba(232, 132, 90, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .status-text {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--wrong-color);
+      letter-spacing: -0.02em;
+    }
+
+    .result-card__answers {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .answer-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .answer-row.yours {
+      background: rgba(232, 132, 90, 0.08);
+      border: 1px solid rgba(232, 132, 90, 0.2);
+    }
+
+    .answer-row.correct {
+      background: var(--correct-bg);
+      border: 1px solid var(--correct-border);
+    }
+
+    .answer-row__label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      width: 76px;
+    }
+
+    .answer-row.yours .answer-row__label { color: var(--wrong-color); }
+    .answer-row.correct .answer-row__label { color: var(--correct-color); }
+
+    .answer-row__val {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .answer-row__icon {
+      margin-left: auto;
+      font-size: 15px;
+    }
+
+    /* ─── Карточка разбора ─── */
+    .breakdown-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 14px;
+      flex-shrink: 0;
+      animation: slideDown 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .breakdown-card__header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .breakdown-card__icon {
+      width: 28px;
+      height: 28px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(42,171,179,0.25);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .breakdown-card__title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .breakdown-card__text {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text-soft);
+    }
+
+    .breakdown-card__text p + p {
+      margin-top: 10px;
+    }
+
+    .math-line {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid rgba(42,171,179,0.2);
+      border-radius: 8px;
+      padding: 6px 14px;
+      margin: 8px 0;
+    }
+
+    /* ─── Типичная ошибка ─── */
+    .mistake-badge {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: rgba(248, 196, 113, 0.07);
+      border: 1px solid rgba(248, 196, 113, 0.2);
+      border-radius: 14px;
+      padding: 13px 15px;
+      margin-bottom: 24px;
+      flex-shrink: 0;
+      animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .mistake-badge__icon {
+      font-size: 16px;
+      line-height: 1.4;
+      flex-shrink: 0;
+    }
+
+    .mistake-badge__text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #F8C471;
+    }
+
+    .mistake-badge__text strong {
+      font-weight: 600;
+    }
+
+    /* ─── Нижний блок ─── */
+    .bottom {
+      margin-top: auto;
+      padding: 0 0 0;
+      flex-shrink: 0;
+    }
+
+    .btn-next {
+      display: block;
+      width: 100%;
+      padding: 17px 24px;
+      background: var(--accent);
+      color: #0D0F13;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      text-align: center;
+      letter-spacing: -0.01em;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 0 28px rgba(42, 171, 179, 0.3);
+      text-decoration: none;
+    }
+
+    .btn-next:active { transform: scale(0.98); }
+
+    .micro-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      padding: 12px 0 36px;
+    }
+
+    .micro-note span {
+      color: var(--accent);
+    }
+
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      .micro-note {
+        padding-bottom: calc(36px + env(safe-area-inset-bottom));
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar__badge">Задание 1 из 10</div>
+    <div class="timer-dim">
+      <div class="timer-dim__dot"></div>
+      <div class="timer-dim__time">09:12</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-fill"></div>
+    </div>
+    <div class="progress-dots">
+      <div class="progress-dot wrong"></div>
+      <div class="progress-dot active"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+    </div>
+  </div>
+
+  <div class="result-card">
+    <div class="result-card__status">
+      <div class="status-icon">✗</div>
+      <div class="status-text">Неверно</div>
+    </div>
+    <div class="result-card__answers">
+      <div class="answer-row yours">
+        <span class="answer-row__label">Твой ответ</span>
+        <span class="answer-row__val">А = 4</span>
+        <span class="answer-row__icon">✗</span>
+      </div>
+      <div class="answer-row correct">
+        <span class="answer-row__label">Правильно</span>
+        <span class="answer-row__val">Б = 10</span>
+        <span class="answer-row__icon">✓</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="breakdown-card">
+    <div class="breakdown-card__header">
+      <div class="breakdown-card__icon">📐</div>
+      <div class="breakdown-card__title">Разбор</div>
+    </div>
+    <div class="breakdown-card__text">
+      <p>Расстояние между точками на координатной прямой — это разность координат по модулю:</p>
+      <div class="math-line">7 − (−3) = 7 + 3 = 10</div>
+      <p>При вычитании отрицательного числа знак меняется на плюс.</p>
+    </div>
+  </div>
+
+  <div class="mistake-badge">
+    <div class="mistake-badge__icon">⚡</div>
+    <div class="mistake-badge__text">
+      <strong>Типичная ошибка:</strong> забыть, что минус на минус даёт плюс — ответ получается 4 вместо 10.
+    </div>
+  </div>
+
+  <div class="bottom">
+    <a href="exam-trial.html" class="btn-next">Следующее задание →</a>
+    <div class="micro-note">Мы добавили тему <span>«Координатная прямая»</span> в список для повторения</div>
+  </div>
+
+</body>
+</html>

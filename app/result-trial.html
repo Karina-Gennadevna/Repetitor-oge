@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Результат диагностики — Репетитор ОГЭ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0D0F13;
+      --surface: #13171F;
+      --surface-2: #1A1F2A;
+      --border: rgba(255,255,255,0.07);
+      --accent: #2AABB3;
+      --accent-dim: rgba(42, 171, 179, 0.12);
+      --accent-glow: rgba(42, 171, 179, 0.3);
+      --text: #F1F5F9;
+      --text-muted: #7A8899;
+      --text-soft: #94A3B8;
+      --green: #4ABA7A;
+      --green-dim: rgba(74, 186, 122, 0.1);
+      --amber: #F8C471;
+      --amber-dim: rgba(248, 196, 113, 0.08);
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      max-width: 430px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 52px 0 28px;
+    }
+
+    .topbar__title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .topbar__badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(42,171,179,0.2);
+      border-radius: 20px;
+      padding: 5px 11px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .topbar__badge::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    /* ─── Главная карточка ─── */
+    .score-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px 24px 24px;
+      margin-bottom: 14px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.4s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .score-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.7;
+    }
+
+    .score-card::after {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 180px; height: 180px;
+      background: radial-gradient(circle, rgba(42,171,179,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .score-layout {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .score-ring {
+      flex-shrink: 0;
+      position: relative;
+      width: 96px;
+      height: 96px;
+    }
+
+    .score-ring svg {
+      width: 96px;
+      height: 96px;
+      transform: rotate(-90deg);
+    }
+
+    .score-ring__track {
+      fill: none;
+      stroke: var(--surface-2);
+      stroke-width: 6;
+    }
+
+    .score-ring__fill {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-dasharray: 251.2;
+      stroke-dashoffset: 251.2;
+      transition: stroke-dashoffset 1.1s cubic-bezier(0.4,0,0.2,1);
+      filter: drop-shadow(0 0 6px rgba(42,171,179,0.6));
+    }
+
+    .score-ring__label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .score-ring__num {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .score-ring__sub {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .score-info__grade {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--amber-dim);
+      border: 1px solid rgba(248,196,113,0.25);
+      border-radius: 10px;
+      padding: 5px 10px;
+      margin-bottom: 10px;
+    }
+
+    .score-info__grade-icon { font-size: 14px; }
+
+    .score-info__grade-text {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--amber);
+    }
+
+    .score-info__headline {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .score-info__gap {
+      font-size: 13px;
+      color: var(--text-soft);
+      line-height: 1.5;
+    }
+
+    .score-info__gap strong { color: var(--accent); font-weight: 600; }
+
+    .score-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    .score-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .stat { text-align: center; }
+
+    .stat__val {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 3px;
+    }
+
+    .stat__val.green { color: var(--green); }
+    .stat__val.amber { color: #E8845A; }
+    .stat__val.muted { color: var(--text-soft); }
+
+    .stat__label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ─── Слабые темы ─── */
+    .section {
+      margin-bottom: 14px;
+      animation: fadeUp 0.45s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .section__header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .section__icon {
+      width: 28px;
+      height: 28px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(42,171,179,0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .section__title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .topic-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+    }
+
+    .topic-card__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .topic-card__name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .topic-card__pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: #E8845A;
+    }
+
+    .topic-bar {
+      height: 4px;
+      background: var(--surface-2);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .topic-bar__fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #E8845A, #F8C471);
+      transition: width 1s cubic-bezier(0.4,0,0.2,1);
+      width: 0%;
+    }
+
+    /* Блок "Всё верно" — если нет слабых тем */
+    .perfect-card {
+      background: var(--green-dim);
+      border: 1px solid rgba(74,186,122,0.25);
+      border-radius: 16px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .perfect-card__icon {
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .perfect-card__text {
+      font-size: 14px;
+      color: var(--green);
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    /* ─── Рекомендации ─── */
+    .rec-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 14px;
+      animation: fadeUp 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .rec-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .rec-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .rec-item:first-child { padding-top: 0; }
+
+    .rec-item__num {
+      width: 24px;
+      height: 24px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(42,171,179,0.2);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .rec-item__text {
+      font-size: 14px;
+      color: var(--text-soft);
+      line-height: 1.5;
+    }
+
+    .rec-item__text strong { color: var(--text); font-weight: 600; }
+
+    /* ─── CTA ─── */
+    .cta-wrap {
+      padding: 8px 0 0;
+      animation: fadeUp 0.55s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .btn-primary {
+      display: block;
+      width: 100%;
+      padding: 18px 24px;
+      background: var(--accent);
+      color: #0D0F13;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      text-align: center;
+      letter-spacing: -0.01em;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 0 32px rgba(42,171,179,0.35);
+      text-decoration: none;
+      margin-bottom: 10px;
+    }
+
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-secondary {
+      display: block;
+      width: 100%;
+      padding: 15px 24px;
+      background: transparent;
+      color: var(--text-soft);
+      font-size: 15px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-secondary:hover { background: var(--surface); color: var(--text); }
+
+    .footer-space {
+      height: 40px;
+    }
+
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      .footer-space { height: calc(40px + env(safe-area-inset-bottom)); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar__title">Результат диагностики</div>
+    <div class="topbar__badge">Математика</div>
+  </div>
+
+  <!-- Главная карточка -->
+  <div class="score-card">
+    <div class="score-layout">
+      <div class="score-ring">
+        <svg viewBox="0 0 96 96">
+          <circle class="score-ring__track" cx="48" cy="48" r="40"/>
+          <circle class="score-ring__fill" id="ringFill" cx="48" cy="48" r="40"/>
+        </svg>
+        <div class="score-ring__label">
+          <div class="score-ring__num" id="ringNum">—</div>
+          <div class="score-ring__sub" id="ringTotal">из 10</div>
+        </div>
+      </div>
+
+      <div class="score-info">
+        <div class="score-info__grade">
+          <span class="score-info__grade-icon">🎯</span>
+          <span class="score-info__grade-text" id="gradeText">Считаем...</span>
+        </div>
+        <div class="score-info__headline" id="headline"></div>
+        <div class="score-info__gap" id="gapText"></div>
+      </div>
+    </div>
+
+    <div class="score-divider"></div>
+
+    <div class="score-stats">
+      <div class="stat">
+        <div class="stat__val green" id="statCorrect">—</div>
+        <div class="stat__label">Верно</div>
+      </div>
+      <div class="stat">
+        <div class="stat__val amber" id="statWrong">—</div>
+        <div class="stat__label">Ошибок</div>
+      </div>
+      <div class="stat">
+        <div class="stat__val muted" id="statTime">—</div>
+        <div class="stat__label">Время</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Слабые темы -->
+  <div class="section" id="weakSection">
+    <div class="section__header">
+      <div class="section__icon">📉</div>
+      <div class="section__title">Что проседает</div>
+    </div>
+    <div id="weakTopicsContainer"></div>
+  </div>
+
+  <!-- Рекомендации -->
+  <div class="section">
+    <div class="section__header">
+      <div class="section__icon">📘</div>
+      <div class="section__title">Что делать дальше</div>
+    </div>
+    <div class="rec-card" id="recCard"></div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-wrap">
+    <a href="plan.html" class="btn-primary">Начать персональный план →</a>
+    <a href="exam-trial.html" class="btn-secondary">Пройти пробник ещё раз</a>
+  </div>
+
+  <div class="footer-space"></div>
+
+  <script>
+    // ─── Данные из exam-trial (теги + правильные ответы) ───
+    const Q_TAGS = [
+      "Числа и вычисления",
+      "Алгебра",
+      "Дроби и проценты",
+      "Геометрия",
+      "Степени и корни",
+      "Алгебра",
+      "Числа и вычисления",
+      "Дроби и проценты",
+      "Геометрия",
+      "Функции и графики"
+    ];
+
+    const Q_CORRECT = [1, 1, 0, 1, 1, 0, 0, 1, 2, 2];
+
+    // ─── Читаем результат ───
+    let state = null;
+    try {
+      const raw = localStorage.getItem('trial_result');
+      if (raw) state = JSON.parse(raw);
+    } catch(e) {}
+
+    // Фолбэк — демо-данные (если открыли напрямую без прохождения)
+    if (!state) {
+      state = {
+        score: 6,
+        total: 10,
+        answers: [1, 0, 0, 1, 1, 1, 0, 1, 2, 0],
+        timeSpent: 463
+      };
+    }
+
+    const { score, total, answers, timeSpent } = state;
+    const wrong = total - score;
+
+    // ─── Прогноз оценки (для 10-вопросного теста) ───
+    function getGrade(s) {
+      if (s >= 9) return 5;
+      if (s >= 7) return 4;
+      if (s >= 4) return 3;
+      return 2;
+    }
+
+    function getGapText(s) {
+      if (s >= 9) return 'Отличный результат — прогноз оценки 5!';
+      if (s >= 7) { const gap = 9 - s; return `До оценки 5 не хватает <strong>${gap} ${pluralize(gap, 'балла','баллов','баллов')}</strong>`; }
+      if (s >= 4) { const gap = 7 - s; return `До оценки 4 не хватает <strong>${gap} ${pluralize(gap, 'балла','баллов','баллов')}</strong>`; }
+      const gap = 4 - s;
+      return `До оценки 3 не хватает <strong>${gap} ${pluralize(gap, 'балла','баллов','баллов')}</strong>`;
+    }
+
+    function pluralize(n, one, few, many) {
+      const mod10 = n % 10, mod100 = n % 100;
+      if (mod10 === 1 && mod100 !== 11) return one;
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
+      return many;
+    }
+
+    // ─── Форматирование времени ───
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${m}:${String(s).padStart(2,'0')}`;
+    }
+
+    // ─── Слабые темы из ошибок ───
+    function calcWeakTopics() {
+      const errors = {}, counts = {};
+      Q_TAGS.forEach((tag, i) => {
+        counts[tag] = (counts[tag] || 0) + 1;
+        if (answers[i] !== Q_CORRECT[i]) {
+          errors[tag] = (errors[tag] || 0) + 1;
+        }
+      });
+      return Object.entries(errors)
+        .map(([name, err]) => ({
+          name,
+          pct: Math.round((err / counts[name]) * 100),
+          errors: err,
+          total: counts[name]
+        }))
+        .sort((a, b) => b.pct - a.pct)
+        .slice(0, 3);
+    }
+
+    // ─── Заполняем DOM ───
+    const grade = getGrade(score);
+    const pct = Math.round((score / total) * 100);
+
+    // Кольцо
+    document.getElementById('ringNum').textContent = score;
+    document.getElementById('ringTotal').textContent = `из ${total}`;
+
+    // Прогноз
+    document.getElementById('gradeText').textContent = `Прогноз: оценка ${grade}`;
+    document.getElementById('headline').innerHTML = `${score} из ${total}<br>правильно`;
+    document.getElementById('gapText').innerHTML = getGapText(score);
+
+    // Статы
+    document.getElementById('statCorrect').textContent = score;
+    document.getElementById('statWrong').textContent = wrong;
+    document.getElementById('statTime').textContent = formatTime(timeSpent);
+
+    // Слабые темы
+    const weakTopics = calcWeakTopics();
+    const container = document.getElementById('weakTopicsContainer');
+
+    if (weakTopics.length === 0) {
+      document.getElementById('weakSection').querySelector('.section__icon').textContent = '🏆';
+      document.getElementById('weakSection').querySelector('.section__title').textContent = 'Слабых тем нет';
+      container.innerHTML = `
+        <div class="perfect-card">
+          <div class="perfect-card__icon">✓</div>
+          <div class="perfect-card__text">Все темы отработаны. Попробуй полный пробник ОГЭ, чтобы закрепить результат.</div>
+        </div>`;
+    } else {
+      container.innerHTML = weakTopics.map(t => `
+        <div class="topic-card">
+          <div class="topic-card__top">
+            <div class="topic-card__name">${t.name}</div>
+            <div class="topic-card__pct">${t.pct}%</div>
+          </div>
+          <div class="topic-bar">
+            <div class="topic-bar__fill" data-width="${t.pct}"></div>
+          </div>
+        </div>`).join('');
+    }
+
+    // Рекомендации
+    const firstWeak = weakTopics[0];
+    const recCard = document.getElementById('recCard');
+    if (firstWeak) {
+      recCard.innerHTML = `
+        <div class="rec-item">
+          <div class="rec-item__num">1</div>
+          <div class="rec-item__text">Повторить <strong>${firstWeak.name}</strong> — там было больше всего ошибок</div>
+        </div>
+        <div class="rec-item">
+          <div class="rec-item__num">2</div>
+          <div class="rec-item__text">Решить <strong>5 задач по слабой теме</strong> — персональный план подберёт по уровню</div>
+        </div>
+        <div class="rec-item">
+          <div class="rec-item__num">3</div>
+          <div class="rec-item__text">Пройти <strong>пробник ещё раз</strong> через несколько дней — увидишь рост прогноза оценки</div>
+        </div>`;
+    } else {
+      recCard.innerHTML = `
+        <div class="rec-item">
+          <div class="rec-item__num">1</div>
+          <div class="rec-item__text">Попробуй <strong>полный пробник ОГЭ</strong> — он покажет реальный уровень</div>
+        </div>
+        <div class="rec-item">
+          <div class="rec-item__num">2</div>
+          <div class="rec-item__text">Работай над скоростью — на экзамене важно уложиться во время</div>
+        </div>`;
+    }
+
+    // ─── Анимации после загрузки ───
+    window.addEventListener('load', () => {
+      // Кольцо
+      setTimeout(() => {
+        const offset = 251.2 * (1 - pct / 100);
+        document.getElementById('ringFill').style.strokeDashoffset = offset;
+      }, 100);
+
+      // Полоски тем
+      setTimeout(() => {
+        document.querySelectorAll('.topic-bar__fill').forEach(el => {
+          el.style.width = el.dataset.width + '%';
+        });
+      }, 300);
+    });
+  </script>
+
+</body>
+</html>

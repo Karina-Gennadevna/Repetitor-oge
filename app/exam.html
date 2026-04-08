@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Симулятор экзамена — ОГЭ в кармане</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════════════════
+       DESIGN TOKENS
+       ═══════════════════════════════════════════════════════ */
+    :root {
+      --bg-base:     #0F1015;
+      --bg-surface:  #17181E;
+      --bg-elevated: #1E2028;
+      --bg-floating: #252830;
+      --bg-overlay:  #2D3038;
+
+      --color-accent:        #2AABB3;
+      --color-accent-hover:  #3DC3CC;
+      --color-accent-subtle: rgba(42,171,179,0.12);
+      --color-accent-border: rgba(42,171,179,0.28);
+
+      --color-success:        #4CC87A;
+      --color-success-subtle: rgba(76,200,122,0.10);
+      --color-success-border: rgba(76,200,122,0.28);
+
+      --color-error:        #F0625A;
+      --color-error-subtle: rgba(240,98,90,0.10);
+      --color-error-border: rgba(240,98,90,0.28);
+
+      --color-warning:        #F5A623;
+      --color-warning-subtle: rgba(245,166,35,0.10);
+      --color-warning-border: rgba(245,166,35,0.28);
+
+      --color-skipped:        #F0625A;
+      --color-marked:         #F5A623;
+      --color-answered:       #2AABB3;
+
+      --text-primary:   #EEEDF0;
+      --text-secondary: #A8A7AF;
+      --text-muted:     #6B6A73;
+      --text-disabled:  #3D3C45;
+
+      --border-subtle:  rgba(255,255,255,0.06);
+      --border-default: rgba(255,255,255,0.10);
+      --border-strong:  rgba(255,255,255,0.16);
+
+      --radius-sm:   8px;
+      --radius-md:   12px;
+      --radius-lg:   16px;
+      --radius-xl:   20px;
+      --radius-full: 9999px;
+
+      --header-h:    56px;
+      --footer-h:    68px;
+      --t-fast: 150ms ease;
+      --t-base: 220ms ease;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       RESET & BASE
+       ═══════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      height: 100dvh;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    textarea, input { font-family: inherit; }
+
+    /* ═══════════════════════════════════════════════════════
+       START SCREEN
+       ═══════════════════════════════════════════════════════ */
+    #start-screen {
+      position: fixed; inset: 0; z-index: 500;
+      background: var(--bg-base);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 32px 24px;
+      text-align: center;
+    }
+    #start-screen.hidden { display: none; }
+
+    .start__badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px;
+      background: var(--color-accent-subtle);
+      border: 1px solid var(--color-accent-border);
+      border-radius: var(--radius-full);
+      font-size: 12px; font-weight: 600;
+      color: var(--color-accent);
+      letter-spacing: 0.06em; text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .start__title {
+      font-size: 28px; font-weight: 800;
+      letter-spacing: -0.6px; line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .start__subject {
+      font-size: 17px; font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+    }
+
+    .start__meta {
+      display: flex; flex-direction: column; gap: 12px;
+      width: 100%; max-width: 320px;
+      margin-bottom: 40px;
+    }
+
+    .start__meta-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+    }
+
+    .start__meta-label { font-size: 14px; color: var(--text-secondary); }
+    .start__meta-value {
+      font-size: 14px; font-weight: 700;
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .start__warning {
+      font-size: 13px; color: var(--text-muted);
+      max-width: 300px; line-height: 1.55;
+      margin-bottom: 32px;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       EXAM SHELL
+       ═══════════════════════════════════════════════════════ */
+    .exam-shell {
+      display: flex; flex-direction: column;
+      height: 100dvh;
+      max-width: 480px; margin: 0 auto;
+      position: relative;
+    }
+
+    /* ─── HEADER ─── */
+    .exam-header {
+      position: fixed; top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 100%; max-width: 480px;
+      height: var(--header-h);
+      display: flex; align-items: center;
+      padding: 0 16px;
+      background: rgba(15,16,21,0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-subtle);
+      z-index: 100;
+      gap: 12px;
+    }
+
+    .header__subject {
+      flex: 1;
+      display: flex; flex-direction: column; gap: 1px;
+    }
+    .header__subject-name {
+      font-size: 13px; font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
+    }
+    .header__subject-level {
+      font-size: 11px; font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .header__timer {
+      display: flex; flex-direction: column; align-items: center; gap: 1px;
+      cursor: default;
+    }
+    .header__timer-digits {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px; font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+      transition: color 600ms ease;
+      line-height: 1;
+    }
+    .header__timer-digits.warn   { color: var(--color-warning); }
+    .header__timer-digits.crit   { color: var(--color-error); animation: timerPulse 2s ease-in-out infinite; }
+    .header__timer-label {
+      font-size: 10px; font-weight: 500;
+      color: var(--text-muted); letter-spacing: 0.04em;
+    }
+
+    @keyframes timerPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+
+    .btn-finish {
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 700;
+      color: var(--text-secondary);
+      border: 1.5px solid var(--border-default);
+      transition: all var(--t-fast);
+      white-space: nowrap;
+    }
+    .btn-finish:hover { border-color: var(--border-strong); color: var(--text-primary); }
+    .btn-finish.danger {
+      color: var(--color-error);
+      border-color: var(--color-error-border);
+      background: var(--color-error-subtle);
+    }
+
+    /* ─── PROGRESS BAR ─── */
+    .exam-progress {
+      position: fixed; top: var(--header-h); left: 50%;
+      transform: translateX(-50%);
+      width: 100%; max-width: 480px;
+      height: 3px; z-index: 100;
+      background: var(--border-subtle);
+    }
+    .exam-progress__fill {
+      height: 100%;
+      background: var(--color-accent);
+      transition: width 300ms ease;
+    }
+
+    /* ─── NAV TOGGLE ─── */
+    .nav-toggle {
+      position: fixed; top: calc(var(--header-h) + 3px); left: 50%;
+      transform: translateX(-50%);
+      width: 100%; max-width: 480px;
+      z-index: 90;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-toggle:active { background: var(--bg-elevated); }
+
+    .nav-toggle__left {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nav-toggle__task {
+      font-size: 13px; font-weight: 700;
+      color: var(--text-primary);
+    }
+    .nav-toggle__part {
+      font-size: 12px; font-weight: 500;
+      color: var(--text-muted);
+      padding: 2px 8px;
+      background: var(--bg-elevated);
+      border-radius: var(--radius-full);
+    }
+
+    .nav-toggle__right {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nav-toggle__stats {
+      font-size: 12px; font-weight: 500;
+      color: var(--text-muted);
+    }
+    .nav-toggle__stats b { color: var(--color-marked); font-weight: 700; }
+    .nav-toggle__icon {
+      color: var(--text-muted);
+      transition: transform var(--t-fast);
+    }
+    .nav-toggle__icon.open { transform: rotate(180deg); }
+
+    /* ─── SCROLL AREA ─── */
+    .exam-scroll {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-top: calc(var(--header-h) + 3px + 41px); /* header + progress + nav-toggle */
+      padding-bottom: var(--footer-h);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .question-area {
+      max-width: 480px; width: 100%;
+      padding: 24px 16px 16px;
+      animation: fadeIn 200ms ease both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .task-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .task-chip--part1 {
+      background: var(--color-accent-subtle);
+      border: 1px solid var(--color-accent-border);
+      color: var(--color-accent);
+    }
+    .task-chip--part2 {
+      background: rgba(155,109,255,0.10);
+      border: 1px solid rgba(155,109,255,0.25);
+      color: #9B6DFF;
+    }
+
+    .task-topic {
+      font-size: 12px; font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .task-text {
+      font-size: 17px; font-weight: 500;
+      line-height: 1.6; letter-spacing: -0.1px;
+      color: var(--text-primary);
+      margin-bottom: 24px;
+    }
+
+    /* ─── ANSWER TYPES ─── */
+
+    /* Multiple choice */
+    .options-list {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+
+    .answer-option {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px;
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-default);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background var(--t-fast), border-color var(--t-fast);
+      -webkit-tap-highlight-color: transparent;
+      text-align: left;
+      width: 100%;
+    }
+    .answer-option:hover { background: var(--bg-elevated); border-color: var(--border-strong); }
+    .answer-option:active { transform: scale(0.99); }
+    .answer-option.selected {
+      background: var(--color-accent-subtle);
+      border-color: var(--color-accent);
+    }
+
+    .answer-letter {
+      width: 30px; height: 30px; flex-shrink: 0;
+      border-radius: var(--radius-sm);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+      color: var(--text-secondary);
+      transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+    }
+    .answer-option.selected .answer-letter {
+      background: var(--color-accent); border-color: var(--color-accent); color: #fff;
+    }
+
+    .answer-text {
+      font-size: 15px; font-weight: 500;
+      color: var(--text-primary); line-height: 1.45; flex: 1;
+    }
+
+    /* Short answer */
+    .short-answer-wrap {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .short-answer-label {
+      font-size: 13px; font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .short-answer-hint {
+      font-size: 12px; color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .short-answer-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-default);
+      border-radius: var(--radius-md);
+      font-size: 18px; font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color var(--t-fast);
+      caret-color: var(--color-accent);
+    }
+    .short-answer-input::placeholder { color: var(--text-disabled); font-family: 'Inter', sans-serif; font-weight: 400; font-size: 15px; }
+    .short-answer-input:focus { border-color: var(--color-accent); }
+
+    /* Long answer */
+    .long-answer-wrap {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .long-answer-label {
+      font-size: 13px; font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .long-answer-textarea {
+      width: 100%;
+      min-height: 160px;
+      padding: 14px 16px;
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-default);
+      border-radius: var(--radius-md);
+      font-size: 15px; font-weight: 400;
+      color: var(--text-primary);
+      line-height: 1.65;
+      outline: none;
+      resize: none;
+      transition: border-color var(--t-fast);
+      caret-color: var(--color-accent);
+    }
+    .long-answer-textarea::placeholder { color: var(--text-muted); }
+    .long-answer-textarea:focus { border-color: var(--color-accent); }
+
+    .long-answer-meta {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: var(--text-muted);
+    }
+    .long-answer-meta__count { font-family: 'JetBrains Mono', monospace; }
+
+    /* ─── FOOTER ─── */
+    .exam-footer {
+      position: fixed; bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 100%; max-width: 480px;
+      height: var(--footer-h);
+      display: flex; align-items: center;
+      gap: 8px;
+      padding: 0 16px calc(env(safe-area-inset-bottom));
+      background: rgba(15,16,21,0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid var(--border-subtle);
+      z-index: 100;
+    }
+
+    .footer-btn {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 12px 8px;
+      border-radius: var(--radius-md);
+      font-size: 13px; font-weight: 700;
+      transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform 100ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .footer-btn:active { transform: scale(0.97); }
+    .footer-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+    .footer-btn--nav {
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-default);
+      color: var(--text-secondary);
+    }
+    .footer-btn--nav:hover:not(:disabled) { background: var(--bg-elevated); border-color: var(--border-strong); color: var(--text-primary); }
+
+    .footer-btn--mark {
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-default);
+      color: var(--text-secondary);
+      flex: 1.4;
+    }
+    .footer-btn--mark:hover:not(:disabled) { background: var(--bg-elevated); }
+    .footer-btn--mark.active {
+      background: var(--color-warning-subtle);
+      border-color: var(--color-warning-border);
+      color: var(--color-warning);
+    }
+
+    .footer-btn--next {
+      background: var(--color-accent);
+      color: #fff;
+      border: 1.5px solid transparent;
+    }
+    .footer-btn--next:hover { background: var(--color-accent-hover); }
+    .footer-btn--next.last {
+      background: var(--color-success);
+    }
+    .footer-btn--next.last:hover { background: #5DD68A; }
+
+    /* ═══════════════════════════════════════════════════════
+       NAV PANEL OVERLAY
+       ═══════════════════════════════════════════════════════ */
+    .nav-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      display: flex; flex-direction: column; justify-content: flex-end;
+      opacity: 0; pointer-events: none;
+      transition: opacity 220ms ease;
+    }
+    .nav-overlay.open { opacity: 1; pointer-events: all; }
+
+    .nav-panel {
+      max-width: 480px; width: 100%; margin: 0 auto;
+      background: var(--bg-floating);
+      border-top: 1px solid var(--border-default);
+      border-radius: 20px 20px 0 0;
+      padding: 20px 16px calc(24px + env(safe-area-inset-bottom));
+      transform: translateY(100%);
+      transition: transform 260ms cubic-bezier(0.32,0.72,0,1);
+      max-height: 80dvh;
+      overflow-y: auto;
+    }
+    .nav-overlay.open .nav-panel { transform: translateY(0); }
+
+    .nav-panel__header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .nav-panel__title {
+      font-size: 15px; font-weight: 700;
+      color: var(--text-primary);
+    }
+    .nav-panel__close {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--bg-elevated);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary);
+    }
+    .nav-panel__close:hover { background: var(--bg-overlay); color: var(--text-primary); }
+
+    .nav-part-label {
+      font-size: 11px; font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      margin: 12px 0 8px;
+    }
+
+    .nav-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .nav-btn {
+      aspect-ratio: 1;
+      border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 700;
+      color: var(--text-secondary);
+      background: var(--bg-elevated);
+      border: 1.5px solid transparent;
+      transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform 100ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-btn:active { transform: scale(0.92); }
+    .nav-btn.current {
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+    .nav-btn.answered {
+      background: var(--color-accent-subtle);
+      border-color: var(--color-accent-border);
+      color: var(--color-accent);
+    }
+    .nav-btn.marked {
+      background: var(--color-warning-subtle);
+      border-color: var(--color-warning-border);
+      color: var(--color-warning);
+    }
+    .nav-btn.skipped {
+      background: var(--color-error-subtle);
+      border-color: var(--color-error-border);
+      color: var(--color-error);
+    }
+
+    .nav-legend {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 6px; margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-subtle);
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text-muted);
+    }
+    .legend-dot {
+      width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0;
+    }
+    .legend-dot--gray   { background: var(--bg-elevated); border: 1px solid var(--border-strong); }
+    .legend-dot--teal   { background: var(--color-accent); }
+    .legend-dot--amber  { background: var(--color-marked); }
+    .legend-dot--red    { background: var(--color-skipped); }
+
+    /* ═══════════════════════════════════════════════════════
+       MODALS
+       ═══════════════════════════════════════════════════════ */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: flex-end; justify-content: center;
+      padding: 16px;
+      animation: backdropIn 200ms ease both;
+    }
+    .modal-backdrop.hidden { display: none; }
+    @keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal {
+      width: 100%; max-width: 480px;
+      background: var(--bg-floating);
+      border: 1px solid var(--border-default);
+      border-radius: 20px;
+      padding: 24px;
+      animation: modalUp 240ms cubic-bezier(0.32,0.72,0,1) both;
+    }
+    @keyframes modalUp {
+      from { transform: translateY(24px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal__title {
+      font-size: 19px; font-weight: 800;
+      letter-spacing: -0.4px; margin-bottom: 6px;
+    }
+    .modal__sub {
+      font-size: 14px; color: var(--text-secondary);
+      line-height: 1.55; margin-bottom: 20px;
+    }
+
+    .modal__stats {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 16px;
+      background: var(--bg-elevated);
+      border-radius: var(--radius-md);
+      margin-bottom: 20px;
+    }
+    .modal__stat-row {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal__stat-label {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; color: var(--text-secondary);
+    }
+    .modal__stat-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .modal__stat-value {
+      font-size: 15px; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .modal__actions { display: flex; flex-direction: column; gap: 8px; }
+
+    .btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; padding: 15px 20px;
+      border-radius: var(--radius-md);
+      font-size: 15px; font-weight: 700;
+      transition: background var(--t-fast), transform 100ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn--ghost {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1.5px solid var(--border-default);
+    }
+    .btn--ghost:hover { background: var(--bg-overlay); }
+    .btn--danger {
+      background: var(--color-error-subtle);
+      color: var(--color-error);
+      border: 1.5px solid var(--color-error-border);
+    }
+    .btn--success {
+      background: var(--color-success);
+      color: #fff;
+    }
+    .btn--success:hover { background: #5DD68A; }
+    .btn--primary {
+      background: var(--color-accent);
+      color: #fff;
+    }
+    .btn--primary:hover { background: var(--color-accent-hover); }
+
+    /* Time's up special */
+    #timesup-modal .modal__title { color: var(--color-error); }
+
+    /* ═══════════════════════════════════════════════════════
+       ACCESSIBILITY
+       ═══════════════════════════════════════════════════════ */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════
+       START SCREEN
+       ══════════════════════════════════════════════════════ -->
+  <div id="start-screen">
+    <div class="start__badge">Симулятор экзамена</div>
+    <h1 class="start__title">ОГЭ по математике</h1>
+    <p class="start__subject">Реальный формат · Условия как на экзамене</p>
+    <div class="start__meta">
+      <div class="start__meta-row">
+        <span class="start__meta-label">Заданий</span>
+        <span class="start__meta-value">25</span>
+      </div>
+      <div class="start__meta-row">
+        <span class="start__meta-label">Часть 1</span>
+        <span class="start__meta-value">18 · краткий ответ</span>
+      </div>
+      <div class="start__meta-row">
+        <span class="start__meta-label">Часть 2</span>
+        <span class="start__meta-value">7 · развёрнутый ответ</span>
+      </div>
+      <div class="start__meta-row">
+        <span class="start__meta-label">Время</span>
+        <span class="start__meta-value">3:55:00</span>
+      </div>
+    </div>
+    <p class="start__warning">Таймер запустится при нажатии на кнопку. Ответы сохраняются автоматически.</p>
+    <button class="btn btn--primary" style="max-width:320px;width:100%" onclick="startExam()">
+      Начать экзамен
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       EXAM SHELL
+       ══════════════════════════════════════════════════════ -->
+  <div class="exam-shell">
+
+    <!-- Header -->
+    <header class="exam-header">
+      <div class="header__subject">
+        <div class="header__subject-name" id="hdr-subject">Математика</div>
+        <div class="header__subject-level">ОГЭ · 2024</div>
+      </div>
+      <div class="header__timer">
+        <div class="header__timer-digits" id="timer-display">3:55:00</div>
+        <div class="header__timer-label">ОСТАЛОСЬ</div>
+      </div>
+      <button class="btn-finish" id="btn-finish" onclick="showConfirmModal()">Завершить</button>
+    </header>
+
+    <!-- Progress bar -->
+    <div class="exam-progress">
+      <div class="exam-progress__fill" id="progress-fill" style="width:4%"></div>
+    </div>
+
+    <!-- Nav toggle -->
+    <button class="nav-toggle" onclick="openNavPanel()" aria-label="Навигация по заданиям">
+      <div class="nav-toggle__left">
+        <span class="nav-toggle__task" id="nav-task-label">Задание 1 из 25</span>
+        <span class="nav-toggle__part" id="nav-part-label">Часть 1</span>
+      </div>
+      <div class="nav-toggle__right">
+        <span class="nav-toggle__stats" id="nav-stats">0 отвечено</span>
+        <span class="nav-toggle__icon" id="nav-icon">
+          <svg width="14" height="14" fill="none" viewBox="0 0 14 14">
+            <path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </div>
+    </button>
+
+    <!-- Scroll area -->
+    <div class="exam-scroll" id="exam-scroll">
+      <div class="question-area" id="question-area">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="exam-footer">
+      <button class="footer-btn footer-btn--nav" id="btn-prev" onclick="goToTask(state.current - 1)" disabled>
+        <svg width="16" height="16" fill="none" viewBox="0 0 16 16">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Назад
+      </button>
+      <button class="footer-btn footer-btn--mark" id="btn-mark" onclick="toggleMark()">
+        <svg width="15" height="15" fill="none" viewBox="0 0 15 15">
+          <rect x="2" y="2" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M5 7.5l2 2 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" id="mark-check" style="opacity:0"/>
+        </svg>
+        Отметить
+      </button>
+      <button class="footer-btn footer-btn--next" id="btn-next" onclick="goNext()">
+        Далее
+        <svg width="16" height="16" fill="none" viewBox="0 0 16 16">
+          <path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </footer>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       NAV PANEL OVERLAY
+       ══════════════════════════════════════════════════════ -->
+  <div class="nav-overlay" id="nav-overlay" onclick="handleNavOverlayClick(event)">
+    <div class="nav-panel" id="nav-panel">
+      <div class="nav-panel__header">
+        <span class="nav-panel__title">Навигация</span>
+        <button class="nav-panel__close" onclick="closeNavPanel()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 14 14">
+            <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div id="nav-grid-container"><!-- rendered by JS --></div>
+      <div class="nav-legend">
+        <div class="legend-item"><div class="legend-dot legend-dot--gray"></div>Не открыто</div>
+        <div class="legend-item"><div class="legend-dot legend-dot--teal"></div>Отвечено</div>
+        <div class="legend-item"><div class="legend-dot legend-dot--amber"></div>Отмечено</div>
+        <div class="legend-item"><div class="legend-dot legend-dot--red"></div>Пропущено</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       CONFIRM SUBMIT MODAL
+       ══════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop hidden" id="confirm-modal">
+    <div class="modal">
+      <div class="modal__title">Завершить экзамен?</div>
+      <div class="modal__sub">После подтверждения вернуться к заданиям нельзя.</div>
+      <div class="modal__stats" id="modal-stats">
+        <div class="modal__stat-row">
+          <span class="modal__stat-label">
+            <span class="modal__stat-dot" style="background:var(--color-answered)"></span>Отвечено
+          </span>
+          <span class="modal__stat-value" id="stat-answered" style="color:var(--color-answered)">0</span>
+        </div>
+        <div class="modal__stat-row">
+          <span class="modal__stat-label">
+            <span class="modal__stat-dot" style="background:var(--color-marked)"></span>Отмечено
+          </span>
+          <span class="modal__stat-value" id="stat-marked" style="color:var(--color-marked)">0</span>
+        </div>
+        <div class="modal__stat-row">
+          <span class="modal__stat-label">
+            <span class="modal__stat-dot" style="background:var(--color-skipped)"></span>Пропущено
+          </span>
+          <span class="modal__stat-value" id="stat-skipped" style="color:var(--color-skipped)">0</span>
+        </div>
+        <div class="modal__stat-row">
+          <span class="modal__stat-label">
+            <span class="modal__stat-dot" style="background:var(--text-muted)"></span>Не открыто
+          </span>
+          <span class="modal__stat-value" id="stat-unvisited" style="color:var(--text-muted)">25</span>
+        </div>
+      </div>
+      <div class="modal__actions">
+        <button class="btn btn--ghost" onclick="hideConfirmModal()">Вернуться к экзамену</button>
+        <button class="btn btn--success" onclick="submitExam()">Завершить и получить результат</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       TIME'S UP MODAL
+       ══════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop hidden" id="timesup-modal">
+    <div class="modal" id="timesup-modal">
+      <div class="modal__title">Время вышло</div>
+      <div class="modal__sub">Экзамен завершён автоматически. Ответы сохранены.</div>
+      <div class="modal__actions">
+        <button class="btn btn--primary" onclick="submitExam()">Посмотреть результат</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════
+       EXAM DATA — ОГЭ Математика 2024
+       ═══════════════════════════════════════════════════════ */
+    const EXAM = {
+      id: 'oge-math-2024',
+      subject: 'Математика',
+      level: 'ОГЭ',
+      timeLimit: 14100, // 235 минут
+      parts: [
+        {
+          label: 'Часть 1',
+          taskRange: [1, 18],
+          tasks: [
+            { id:1,  type:'short',  topic:'Числа',          text:'Вычислите: 0,4 · 15 − 2,5', hint:'Введите число' },
+            { id:2,  type:'short',  topic:'Степени',        text:'Вычислите: 4² + (−3)³', hint:'Введите число' },
+            { id:3,  type:'choice', topic:'Алгебра',        text:'Укажите значение x, при котором выражение x² − 9 равно нулю и x > 0:', options:['x = 1','x = 3','x = 9','x = 4'], correct:1 },
+            { id:4,  type:'short',  topic:'Уравнения',      text:'Решите уравнение: 5x + 3 = 2x + 15', hint:'Введите значение x' },
+            { id:5,  type:'short',  topic:'Проценты',       text:'Найдите 15% от числа 140', hint:'Введите число' },
+            { id:6,  type:'choice', topic:'Геометрия',      text:'Периметр прямоугольника равен 28 см, одна сторона равна 8 см. Найдите другую сторону:', options:['4 см','6 см','10 см','12 см'], correct:1 },
+            { id:7,  type:'short',  topic:'Дроби',          text:'Вычислите: 1/2 + 3/8. Запишите ответ в виде дроби.', hint:'Например: 7/8' },
+            { id:8,  type:'short',  topic:'Числа',          text:'Среди чисел −7, 3, 0, −1, 5 найдите наименьшее', hint:'Введите число' },
+            { id:9,  type:'choice', topic:'Функции',        text:'Функция y = 2x − 4. При каком значении x функция равна нулю?', options:['x = −4','x = 2','x = 4','x = −2'], correct:1 },
+            { id:10, type:'short',  topic:'Геометрия',      text:'Катеты прямоугольного треугольника равны 6 и 8. Найдите длину гипотенузы.', hint:'Введите число' },
+            { id:11, type:'short',  topic:'Алгебра',        text:'Вычислите: (2 + 3)² − 4 · 3', hint:'Введите число' },
+            { id:12, type:'short',  topic:'Статистика',     text:'Найдите среднее арифметическое чисел: 5, 8, 11, 14, 17', hint:'Введите число' },
+            { id:13, type:'short',  topic:'Уравнения',      text:'Решите уравнение: x/3 − 2 = 1', hint:'Введите значение x' },
+            { id:14, type:'choice', topic:'Степени',        text:'Чему равно выражение (−2)⁴?', options:['−16','−8','8','16'], correct:3 },
+            { id:15, type:'short',  topic:'Числа',          text:'Найдите значение: |−15| − |7|', hint:'Введите число' },
+            { id:16, type:'short',  topic:'Алгебра',        text:'Если 3a − 7 = 8, то a = ?', hint:'Введите значение a' },
+            { id:17, type:'short',  topic:'Геометрия',      text:'Найдите площадь треугольника с основанием 12 см и высотой 5 см.', hint:'Введите число в кв. см' },
+            { id:18, type:'short',  topic:'Проценты',       text:'Товар стоил 500 ₽. Цену повысили на 20%. Какова новая цена?', hint:'Введите сумму в рублях' },
+          ]
+        },
+        {
+          label: 'Часть 2',
+          taskRange: [19, 25],
+          tasks: [
+            { id:19, type:'long', topic:'Текстовые задачи',  text:'Турист прошёл 12 км за 3 часа, затем ещё 8 км за 2 часа. Найдите его среднюю скорость за всё время пути. Запишите решение.' },
+            { id:20, type:'long', topic:'Геометрия',         text:'Прямоугольный треугольник имеет катеты 3 и 4 см. Найдите его периметр и площадь. Запишите решение и обоснование.' },
+            { id:21, type:'long', topic:'Алгебра',           text:'Решите систему уравнений:\n2x + y = 7\nx − y = 2\nЗапишите полное решение.' },
+            { id:22, type:'long', topic:'Функции',           text:'Найдите нули функции y = x² − 2x − 3. Запишите решение. Укажите промежутки, на которых функция принимает отрицательные значения.' },
+            { id:23, type:'long', topic:'Статистика',        text:'Дан набор чисел: 3, 7, 2, 9, 5, 1, 8. Найдите медиану, моду и размах. Запишите решение.' },
+            { id:24, type:'long', topic:'Геометрия',         text:'Два угла треугольника равны 40° и 75°. Найдите третий угол. Определите вид треугольника по углам. Запишите обоснование.' },
+            { id:25, type:'long', topic:'Текстовые задачи',  text:'Велосипедист и пешеход вышли навстречу друг другу из городов А и Б. Расстояние между городами 60 км. Скорость велосипедиста 15 км/ч, пешехода — 5 км/ч. Через сколько часов они встретятся? Запишите решение.' },
+          ]
+        }
+      ]
+    };
+
+    /* Плоский список всех заданий */
+    const ALL_TASKS = EXAM.parts.flatMap(p => p.tasks);
+
+    /* ═══════════════════════════════════════════════════════
+       STATE
+       ═══════════════════════════════════════════════════════ */
+    const state = {
+      current:   0,        // индекс текущего задания (0-24)
+      timeLeft:  EXAM.timeLimit,
+      timerRef:  null,
+      started:   false,
+      submitted: false,
+      tasks: ALL_TASKS.map(t => ({
+        id:      t.id,
+        status:  'unvisited', // unvisited | empty | answered | skipped
+        marked:  false,
+        answer:  null,
+      }))
+    };
+
+    /* ═══════════════════════════════════════════════════════
+       START
+       ═══════════════════════════════════════════════════════ */
+    function startExam() {
+      document.getElementById('start-screen').classList.add('hidden');
+      state.started = true;
+      startTimer();
+      renderQuestion(0);
+      updateHeader();
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       TIMER
+       ═══════════════════════════════════════════════════════ */
+    function startTimer() {
+      state.timerRef = setInterval(() => {
+        state.timeLeft--;
+        renderTimer();
+        if (state.timeLeft <= 0) {
+          clearInterval(state.timerRef);
+          timesUp();
+        }
+      }, 1000);
+    }
+
+    function renderTimer() {
+      const t = state.timeLeft;
+      const h = Math.floor(t / 3600);
+      const m = Math.floor((t % 3600) / 60);
+      const s = t % 60;
+      const display = h > 0
+        ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+        : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+      const el = document.getElementById('timer-display');
+      el.textContent = display;
+      el.className = 'header__timer-digits';
+      if (t <= 600)       el.classList.add('crit');
+      else if (t <= 1800) el.classList.add('warn');
+
+      // Кнопка завершить становится красной при < 10 мин
+      document.getElementById('btn-finish').classList.toggle('danger', t <= 600);
+    }
+
+    function timesUp() {
+      document.getElementById('timesup-modal').classList.remove('hidden');
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       QUESTION RENDER
+       ═══════════════════════════════════════════════════════ */
+    function renderQuestion(index) {
+      const task    = ALL_TASKS[index];
+      const taskSt  = state.tasks[index];
+      const part    = index < 18 ? EXAM.parts[0] : EXAM.parts[1];
+      const isLast  = index === ALL_TASKS.length - 1;
+
+      // Помечаем как посещённое
+      if (taskSt.status === 'unvisited') taskSt.status = 'empty';
+
+      const area = document.getElementById('question-area');
+      area.innerHTML = ''; // очищаем
+      area.classList.remove('fadeIn');
+      void area.offsetWidth; // reflow для переанимации
+      area.classList.add('fadeIn');
+
+      // Chip
+      const chip = document.createElement('div');
+      chip.className = `task-chip task-chip--${index < 18 ? 'part1' : 'part2'}`;
+      chip.textContent = `${part.label} · Задание ${task.id}`;
+      area.appendChild(chip);
+
+      // Topic
+      const topicEl = document.createElement('div');
+      topicEl.className = 'task-topic';
+      topicEl.textContent = task.topic;
+      area.appendChild(topicEl);
+
+      // Text
+      const textEl = document.createElement('div');
+      textEl.className = 'task-text';
+      textEl.textContent = task.text; // whitespace: pre-wrap через CSS if needed
+      if (task.type === 'long') textEl.style.whiteSpace = 'pre-line';
+      area.appendChild(textEl);
+
+      // Input zone
+      if (task.type === 'choice') renderChoice(area, task, taskSt);
+      else if (task.type === 'short') renderShort(area, task, taskSt);
+      else renderLong(area, task, taskSt);
+
+      // Update UI
+      updateHeader();
+      updateFooter(index, isLast, taskSt);
+      updateMarkButton(taskSt);
+
+      // Scroll to top
+      document.getElementById('exam-scroll').scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* Multiple choice */
+    function renderChoice(container, task, taskSt) {
+      const list = document.createElement('div');
+      list.className = 'options-list';
+      const letters = ['А','Б','В','Г'];
+      task.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-option' + (taskSt.answer === String(i) ? ' selected' : '');
+        btn.innerHTML = `<span class="answer-letter">${letters[i]}</span><span class="answer-text">${opt}</span>`;
+        btn.addEventListener('click', () => {
+          taskSt.answer = String(i);
+          taskSt.status = 'answered';
+          container.querySelectorAll('.answer-option').forEach((b,j) => {
+            b.classList.toggle('selected', j === i);
+          });
+          updateMarkButton(taskSt);
+          updateHeader();
+          updateNavStats();
+        });
+        list.appendChild(btn);
+      });
+      container.appendChild(list);
+    }
+
+    /* Short answer */
+    function renderShort(container, task, taskSt) {
+      const wrap = document.createElement('div');
+      wrap.className = 'short-answer-wrap';
+      wrap.innerHTML = `
+        <label class="short-answer-label">Ответ:</label>
+        <input class="short-answer-input" type="text" inputmode="decimal"
+          placeholder="Введите ответ…" value="${taskSt.answer || ''}">
+        <span class="short-answer-hint">${task.hint || ''}</span>
+      `;
+      const input = wrap.querySelector('input');
+      input.addEventListener('input', () => {
+        taskSt.answer = input.value.trim();
+        taskSt.status = taskSt.answer ? 'answered' : 'empty';
+        updateHeader();
+        updateNavStats();
+      });
+      container.appendChild(wrap);
+      // Фокус с задержкой чтобы не мешать анимации
+      setTimeout(() => input.focus(), 300);
+    }
+
+    /* Long answer */
+    function renderLong(container, task, taskSt) {
+      const wrap = document.createElement('div');
+      wrap.className = 'long-answer-wrap';
+      wrap.innerHTML = `
+        <label class="long-answer-label">Ваше решение и ответ:</label>
+        <textarea class="long-answer-textarea" rows="8"
+          placeholder="Запишите ход решения…">${taskSt.answer || ''}</textarea>
+        <div class="long-answer-meta">
+          <span>Запишите полное решение</span>
+          <span class="long-answer-meta__count">0 слов</span>
+        </div>
+      `;
+      const ta    = wrap.querySelector('textarea');
+      const count = wrap.querySelector('.long-answer-meta__count');
+
+      const updateCount = () => {
+        const words = ta.value.trim() ? ta.value.trim().split(/\s+/).length : 0;
+        count.textContent = `${words} ${wordForm(words)}`;
+      };
+
+      ta.addEventListener('input', () => {
+        // Autoresize
+        ta.style.height = 'auto';
+        ta.style.height = ta.scrollHeight + 'px';
+        taskSt.answer = ta.value;
+        taskSt.status = taskSt.answer.trim() ? 'answered' : 'empty';
+        updateCount();
+        updateHeader();
+        updateNavStats();
+      });
+
+      container.appendChild(wrap);
+      updateCount();
+    }
+
+    function wordForm(n) {
+      if (n % 10 === 1 && n % 100 !== 11) return 'слово';
+      if ([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) return 'слова';
+      return 'слов';
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       NAVIGATION
+       ═══════════════════════════════════════════════════════ */
+    function goToTask(index) {
+      if (index < 0 || index >= ALL_TASKS.length) return;
+      state.current = index;
+      renderQuestion(index);
+      renderNavGrid();
+    }
+
+    function goNext() {
+      const taskSt = state.tasks[state.current];
+      // Если нет ответа и уходим → skipped
+      if (!taskSt.answer && taskSt.status === 'empty') {
+        taskSt.status = 'skipped';
+      }
+      if (state.current === ALL_TASKS.length - 1) {
+        showConfirmModal();
+      } else {
+        goToTask(state.current + 1);
+      }
+    }
+
+    function toggleMark() {
+      const taskSt = state.tasks[state.current];
+      taskSt.marked = !taskSt.marked;
+      updateMarkButton(taskSt);
+      updateNavStats();
+      renderNavGrid();
+    }
+
+    function updateMarkButton(taskSt) {
+      const btn   = document.getElementById('btn-mark');
+      const check = document.getElementById('mark-check');
+      if (taskSt.marked) {
+        btn.classList.add('active');
+        btn.childNodes[1].textContent = ' Снять отметку';
+        check.style.opacity = '1';
+      } else {
+        btn.classList.remove('active');
+        // restore text
+        btn.innerHTML = `
+          <svg width="15" height="15" fill="none" viewBox="0 0 15 15">
+            <rect x="2" y="2" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M5 7.5l2 2 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" id="mark-check" style="opacity:0"/>
+          </svg>
+          Отметить`;
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       HEADER & FOOTER UPDATE
+       ═══════════════════════════════════════════════════════ */
+    function updateHeader() {
+      const idx = state.current;
+      document.getElementById('nav-task-label').textContent = `Задание ${idx + 1} из ${ALL_TASKS.length}`;
+      document.getElementById('nav-part-label').textContent = idx < 18 ? 'Часть 1' : 'Часть 2';
+
+      const fill = ((idx + 1) / ALL_TASKS.length) * 100;
+      document.getElementById('progress-fill').style.width = fill + '%';
+
+      updateNavStats();
+    }
+
+    function updateNavStats() {
+      const answered = state.tasks.filter(t => t.status === 'answered').length;
+      const marked   = state.tasks.filter(t => t.marked).length;
+      let statsText  = `${answered} отвечено`;
+      if (marked > 0) statsText += ` · <b>${marked} отмечено</b>`;
+      document.getElementById('nav-stats').innerHTML = statsText;
+    }
+
+    function updateFooter(index, isLast, taskSt) {
+      document.getElementById('btn-prev').disabled = index === 0;
+
+      const nextBtn = document.getElementById('btn-next');
+      if (isLast) {
+        nextBtn.classList.add('last');
+        nextBtn.innerHTML = `Завершить
+          <svg width="16" height="16" fill="none" viewBox="0 0 16 16">
+            <path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>`;
+      } else {
+        nextBtn.classList.remove('last');
+        nextBtn.innerHTML = `Далее
+          <svg width="16" height="16" fill="none" viewBox="0 0 16 16">
+            <path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>`;
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       NAV PANEL
+       ═══════════════════════════════════════════════════════ */
+    function openNavPanel() {
+      renderNavGrid();
+      document.getElementById('nav-overlay').classList.add('open');
+      document.getElementById('nav-icon').classList.add('open');
+    }
+
+    function closeNavPanel() {
+      document.getElementById('nav-overlay').classList.remove('open');
+      document.getElementById('nav-icon').classList.remove('open');
+    }
+
+    function handleNavOverlayClick(e) {
+      if (e.target === document.getElementById('nav-overlay')) closeNavPanel();
+    }
+
+    function renderNavGrid() {
+      const container = document.getElementById('nav-grid-container');
+      container.innerHTML = '';
+
+      EXAM.parts.forEach(part => {
+        const partLabel = document.createElement('div');
+        partLabel.className = 'nav-part-label';
+        partLabel.textContent = part.label;
+        container.appendChild(partLabel);
+
+        const grid = document.createElement('div');
+        grid.className = 'nav-grid';
+
+        part.tasks.forEach(task => {
+          const idx    = ALL_TASKS.findIndex(t => t.id === task.id);
+          const taskSt = state.tasks[idx];
+          const btn    = document.createElement('button');
+          btn.className = 'nav-btn';
+          btn.textContent = task.id;
+
+          if (idx === state.current) btn.classList.add('current');
+          if (taskSt.marked)              btn.classList.add('marked');
+          else if (taskSt.status === 'answered') btn.classList.add('answered');
+          else if (taskSt.status === 'skipped')  btn.classList.add('skipped');
+
+          btn.addEventListener('click', () => {
+            closeNavPanel();
+            goToTask(idx);
+          });
+
+          grid.appendChild(btn);
+        });
+
+        container.appendChild(grid);
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       CONFIRM MODAL
+       ═══════════════════════════════════════════════════════ */
+    function showConfirmModal() {
+      const answered  = state.tasks.filter(t => t.status === 'answered').length;
+      const marked    = state.tasks.filter(t => t.marked).length;
+      const skipped   = state.tasks.filter(t => t.status === 'skipped').length;
+      const unvisited = state.tasks.filter(t => t.status === 'unvisited').length;
+
+      document.getElementById('stat-answered').textContent  = answered;
+      document.getElementById('stat-marked').textContent    = marked;
+      document.getElementById('stat-skipped').textContent   = skipped;
+      document.getElementById('stat-unvisited').textContent = unvisited;
+      document.getElementById('confirm-modal').classList.remove('hidden');
+    }
+
+    function hideConfirmModal() {
+      document.getElementById('confirm-modal').classList.add('hidden');
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       SUBMIT
+       ═══════════════════════════════════════════════════════ */
+    function submitExam() {
+      clearInterval(state.timerRef);
+      state.submitted = true;
+
+      // Сохраняем в sessionStorage для экрана результатов
+      try {
+        const timeSpent = EXAM.timeLimit - state.timeLeft;
+        sessionStorage.setItem('exam_result', JSON.stringify({
+          examId:    EXAM.id,
+          subject:   EXAM.subject,
+          level:     EXAM.level,
+          tasks:     state.tasks,
+          allTasks:  ALL_TASKS,
+          timeSpent,
+          submittedAt: Date.now(),
+        }));
+      } catch(e) {}
+
+      window.location.href = 'result.html';
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       KEYBOARD SHORTCUTS
+       ═══════════════════════════════════════════════════════ */
+    document.addEventListener('keydown', e => {
+      if (!state.started || state.submitted) return;
+      // Только если не в textarea/input
+      const tag = document.activeElement.tagName;
+      if (tag === 'TEXTAREA' || tag === 'INPUT') return;
+
+      if (e.key === 'ArrowRight') goNext();
+      if (e.key === 'ArrowLeft' && state.current > 0) goToTask(state.current - 1);
+      if (e.key === 'm' || e.key === 'м') toggleMark();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Персональный план — Репетитор ОГЭ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0D0F13;
+      --surface: #13171F;
+      --surface-2: #1A1F2A;
+      --border: rgba(255,255,255,0.07);
+      --accent: #2AABB3;
+      --accent-dim: rgba(42, 171, 179, 0.12);
+      --accent-glow: rgba(42, 171, 179, 0.3);
+      --text: #F1F5F9;
+      --text-muted: #7A8899;
+      --text-soft: #94A3B8;
+      --green: #4ABA7A;
+      --green-dim: rgba(74, 186, 122, 0.1);
+      --amber: #F8C471;
+      --amber-dim: rgba(248, 196, 113, 0.08);
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      max-width: 430px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* ─── Шапка ─── */
+    .topbar {
+      padding: 52px 0 24px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .topbar__left {}
+
+    .topbar__title {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 5px;
+    }
+
+    .topbar__sub {
+      font-size: 14px;
+      color: var(--text-soft);
+      font-weight: 500;
+    }
+
+    .topbar__sub strong {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .topbar__avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    /* ─── Карточка цели ─── */
+    .goal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 14px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.35s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .goal-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.6;
+    }
+
+    .goal-card__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .goal-card__label {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .goal-card__grade {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .grade-badge {
+      background: var(--accent-dim);
+      border: 1px solid rgba(42,171,179,0.25);
+      border-radius: 10px;
+      padding: 4px 12px;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.01em;
+    }
+
+    /* Прогресс с двумя метками */
+    .goal-progress {
+      margin-bottom: 12px;
+    }
+
+    .goal-progress__labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .goal-progress__from {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .goal-progress__to {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .goal-track {
+      height: 8px;
+      background: var(--surface-2);
+      border-radius: 99px;
+      overflow: visible;
+      position: relative;
+    }
+
+    .goal-fill {
+      height: 100%;
+      width: 60%;
+      background: linear-gradient(90deg, var(--accent), rgba(42,171,179,0.7));
+      border-radius: 99px;
+      position: relative;
+      transition: width 1s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: 0 0 10px rgba(42,171,179,0.4);
+    }
+
+    /* Маркер цели */
+    .goal-marker {
+      position: absolute;
+      top: 50%;
+      left: 80%;
+      transform: translate(-50%, -50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 2px dashed rgba(42,171,179,0.5);
+    }
+
+    .goal-progress__forecast {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+
+    .goal-progress__forecast strong {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    /* ─── Сегодня ─── */
+    .section {
+      margin-bottom: 14px;
+    }
+
+    .section__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .section__title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section__icon {
+      width: 28px;
+      height: 28px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(42,171,179,0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .section__title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .section__meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Карточки задач */
+    .task-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      animation: fadeUp 0.4s cubic-bezier(0.4,0,0.2,1);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .task-card:active {
+      background: var(--surface-2);
+    }
+
+    .task-card.done {
+      opacity: 0.5;
+    }
+
+    .task-card.done .task-card__check {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .task-card.done .task-card__check::after {
+      content: '';
+      display: block;
+      width: 10px;
+      height: 6px;
+      border-left: 2px solid #0D0F13;
+      border-bottom: 2px solid #0D0F13;
+      transform: rotate(-45deg) translateY(-1px);
+    }
+
+    .task-card__check {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .task-card__body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .task-card__name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-card__time {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .task-card__arrow {
+      font-size: 16px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    /* Суммарное время */
+    .tasks-total {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .tasks-total strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* ─── Streak ─── */
+    .streak-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      animation: fadeUp 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .streak-flame {
+      width: 48px;
+      height: 48px;
+      background: rgba(248, 196, 113, 0.08);
+      border: 1px solid rgba(248, 196, 113, 0.2);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .streak-flame__icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .streak-flame__num {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--amber);
+      margin-top: 1px;
+    }
+
+    .streak-info {
+      flex: 1;
+    }
+
+    .streak-info__title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+
+    .streak-info__sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .streak-info__sub strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Недельный трекер */
+    .week-track {
+      display: flex;
+      gap: 6px;
+    }
+
+    .week-day {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .week-day__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+    }
+
+    .week-day__dot.active {
+      background: var(--amber);
+      border-color: var(--amber);
+      box-shadow: 0 0 6px rgba(248,196,113,0.4);
+    }
+
+    .week-day__label {
+      font-size: 9px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+    }
+
+    /* ─── CTA ─── */
+    .cta-wrap {
+      padding-bottom: 0;
+      animation: fadeUp 0.55s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .btn-primary {
+      display: block;
+      width: 100%;
+      padding: 18px 24px;
+      background: var(--accent);
+      color: #0D0F13;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      text-align: center;
+      letter-spacing: -0.01em;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 0 32px rgba(42,171,179,0.35);
+      text-decoration: none;
+    }
+
+    .btn-primary:active { transform: scale(0.98); }
+
+    .footer-space {
+      height: 48px;
+    }
+
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      .footer-space {
+        height: calc(48px + env(safe-area-inset-bottom));
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar__left">
+      <div class="topbar__title">Твой персональный<br>план</div>
+      <div class="topbar__sub">До оценки 4 осталось <strong>2 балла</strong></div>
+    </div>
+    <div class="topbar__avatar">👤</div>
+  </div>
+
+  <!-- Цель -->
+  <div class="goal-card">
+    <div class="goal-card__top">
+      <div class="goal-card__label">Текущая цель</div>
+      <div class="goal-card__grade">
+        <div class="grade-badge">Оценка 4</div>
+      </div>
+    </div>
+
+    <div class="goal-progress">
+      <div class="goal-progress__labels">
+        <span class="goal-progress__from">Сейчас: 3</span>
+        <span class="goal-progress__to">Цель: 4</span>
+      </div>
+      <div class="goal-track">
+        <div class="goal-fill" id="goalFill"></div>
+        <div class="goal-marker"></div>
+      </div>
+      <div class="goal-progress__forecast">
+        Прогноз: <strong>+2 балла за 7–10 дней</strong> при ежедневных занятиях
+      </div>
+    </div>
+  </div>
+
+  <!-- Сегодня -->
+  <div class="section">
+    <div class="section__header">
+      <div class="section__title-wrap">
+        <div class="section__icon">📅</div>
+        <div class="section__title">Сегодня</div>
+      </div>
+      <div class="section__meta">~ 18 минут</div>
+    </div>
+
+    <div class="task-card" onclick="toggleTask(this)">
+      <div class="task-card__check">📐</div>
+      <div class="task-card__body">
+        <div class="task-card__name">5 задач: координатная прямая</div>
+        <div class="task-card__time">⏱ ~10 минут · Математика</div>
+      </div>
+      <div class="task-card__arrow">›</div>
+    </div>
+
+    <div class="task-card" onclick="toggleTask(this)">
+      <div class="task-card__check">🔍</div>
+      <div class="task-card__body">
+        <div class="task-card__name">Разбор типичных ошибок</div>
+        <div class="task-card__time">⏱ ~5 минут · Теория</div>
+      </div>
+      <div class="task-card__arrow">›</div>
+    </div>
+
+    <div class="task-card" onclick="toggleTask(this)">
+      <div class="task-card__check">✅</div>
+      <div class="task-card__body">
+        <div class="task-card__name">Мини-тест</div>
+        <div class="task-card__time">⏱ ~3 минуты · Проверка</div>
+      </div>
+      <div class="task-card__arrow">›</div>
+    </div>
+
+    <div class="tasks-total">
+      <span>Всего сегодня:</span>
+      <strong>3 задачи · 18 минут</strong>
+    </div>
+  </div>
+
+  <!-- Стрик -->
+  <div class="streak-card">
+    <div class="streak-flame">
+      <div class="streak-flame__icon">🔥</div>
+      <div class="streak-flame__num">1 день</div>
+    </div>
+    <div class="streak-info">
+      <div class="streak-info__title">Дней подряд: 1</div>
+      <div class="streak-info__sub">До цели осталось <strong>2 балла</strong>. Занимайся каждый день — и дойдёшь за неделю.</div>
+    </div>
+    <div class="week-track">
+      <div class="week-day">
+        <div class="week-day__dot active"></div>
+        <div class="week-day__label">Пн</div>
+      </div>
+      <div class="week-day">
+        <div class="week-day__dot"></div>
+        <div class="week-day__label">Вт</div>
+      </div>
+      <div class="week-day">
+        <div class="week-day__dot"></div>
+        <div class="week-day__label">Ср</div>
+      </div>
+      <div class="week-day">
+        <div class="week-day__dot"></div>
+        <div class="week-day__label">Чт</div>
+      </div>
+      <div class="week-day">
+        <div class="week-day__dot"></div>
+        <div class="week-day__label">Пт</div>
+      </div>
+      <div class="week-day">
+        <div class="week-day__dot"></div>
+        <div class="week-day__label">Сб</div>
+      </div>
+      <div class="week-day">
+        <div class="week-day__dot"></div>
+        <div class="week-day__label">Вс</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-wrap">
+    <a href="practice.html" class="btn-primary" id="ctaBtn">Подготовиться к следующему пробнику →</a>
+  </div>
+
+  <div class="footer-space"></div>
+
+  <script>
+    // Анимация прогресс-бара цели
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('goalFill').style.width = '60%';
+      }, 150);
+    });
+
+    // Тап по задаче — отметить выполненной
+    function toggleTask(card) {
+      card.classList.toggle('done');
+      const check = card.querySelector('.task-card__check');
+      if (card.classList.contains('done')) {
+        check.innerHTML = '';
+        check.style.background = 'var(--green)';
+        check.style.borderColor = 'var(--green)';
+        const tick = document.createElement('span');
+        tick.style.cssText = 'display:block;width:10px;height:6px;border-left:2px solid #0D0F13;border-bottom:2px solid #0D0F13;transform:rotate(-45deg) translateY(-1px)';
+        check.appendChild(tick);
+      } else {
+        check.style.background = '';
+        check.style.borderColor = '';
+        check.innerHTML = ['📐','🔍','✅'][Array.from(document.querySelectorAll('.task-card')).indexOf(card)];
+      }
+      updateCTA();
+    }
+
+    function updateCTA() {
+      const done = document.querySelectorAll('.task-card.done').length;
+      const total = document.querySelectorAll('.task-card').length;
+      const btn = document.querySelector('.btn-primary');
+      if (done === total) {
+        btn.textContent = 'Все задачи выполнены ✓';
+        btn.style.background = 'var(--green)';
+        btn.style.boxShadow = '0 0 32px rgba(74,186,122,0.35)';
+      } else {
+        btn.textContent = 'Подготовиться к следующему пробнику →';
+        btn.style.background = '';
+        btn.style.boxShadow = '';
+      }
+    }
+  </script>
+
+</body>
+</html>

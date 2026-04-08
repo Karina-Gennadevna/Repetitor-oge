@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Репетитор ОГЭ — Симулятор реального экзамена по ФИПИ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Design tokens ─── */
+    :root {
+      --bg-base:       #0F1015;
+      --bg-surface:    #17181E;
+      --bg-elevated:   #1E2028;
+      --bg-hover:      #252730;
+
+      --color-accent:       #2AABB3;
+      --color-accent-hover: #3DC3CC;
+      --color-accent-dim:   rgba(42,171,179,.15);
+      --color-accent-border:rgba(42,171,179,.35);
+
+      --color-pro:    #9B6DFF;
+      --color-pro-dim:rgba(155,109,255,.15);
+
+      --color-streak: #FF9A3C;
+
+      --text-primary:   #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted:     #64748B;
+
+      --border:      rgba(255,255,255,.07);
+      --border-light:rgba(255,255,255,.12);
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+
+      --shadow-card: 0 4px 24px rgba(0,0,0,.45);
+      --shadow-glow: 0 0 32px rgba(42,171,179,.25);
+
+      --navbar-height: 64px;
+    }
+
+    /* ─── Reset ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; border: none; }
+    img, svg { display: block; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+
+    /* ─── Navbar ─── */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--navbar-height);
+      z-index: 100;
+      background: rgba(15,16,21,.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+    .navbar__logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -.3px;
+    }
+    .navbar__actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      transition: color .15s, background .15s;
+    }
+    .btn-ghost:hover { color: var(--text-primary); background: var(--bg-elevated); }
+    .btn-primary {
+      background: var(--color-accent);
+      color: #fff;
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      transition: background .15s, transform .1s;
+    }
+    .btn-primary:hover { background: var(--color-accent-hover); }
+    .btn-primary:active { transform: scale(.97); }
+    .navbar__menu-btn {
+      display: none;
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 6px;
+      border-radius: var(--radius-sm);
+    }
+    @media (max-width: 580px) {
+      .navbar__actions .btn-ghost { display: none; }
+      .navbar__menu-btn { display: flex; align-items: center; }
+    }
+
+    /* ─── Sections layout ─── */
+    .section { padding: 80px 20px; }
+    .section--sm { padding: 60px 20px; }
+    .container { max-width: 960px; margin: 0 auto; }
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--color-accent);
+      margin-bottom: 12px;
+    }
+    .section-label::before {
+      content: '';
+      display: block;
+      width: 16px; height: 2px;
+      background: var(--color-accent);
+      border-radius: 1px;
+    }
+    .section-title {
+      font-size: clamp(24px, 5vw, 36px);
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -.4px;
+      margin-bottom: 12px;
+    }
+    .section-sub {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 560px;
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      padding-top: calc(var(--navbar-height) + 72px);
+      padding-bottom: 80px;
+      padding-left: 20px;
+      padding-right: 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero__glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 640px; height: 400px;
+      background: radial-gradient(ellipse at center, rgba(42,171,179,.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--color-accent-dim);
+      border: 1px solid var(--color-accent-border);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-accent);
+      margin-bottom: 28px;
+    }
+    .hero__badge-dot {
+      width: 6px; height: 6px;
+      background: var(--color-accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .5; transform: scale(.8); }
+    }
+    .hero__title {
+      font-size: clamp(30px, 7vw, 58px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -.6px;
+      max-width: 740px;
+      margin: 0 auto 20px;
+    }
+    .hero__title em {
+      font-style: normal;
+      color: var(--color-accent);
+    }
+    .hero__sub {
+      font-size: clamp(15px, 2.5vw, 17px);
+      color: var(--text-secondary);
+      max-width: 520px;
+      margin: 0 auto 36px;
+      line-height: 1.7;
+    }
+
+    /* Hero value chips */
+    .hero__chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 40px;
+    }
+    .hero__chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+    .hero__chip-dot {
+      width: 6px; height: 6px;
+      background: var(--color-accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .hero__actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn-hero {
+      background: var(--color-accent);
+      color: #fff;
+      padding: 16px 36px;
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -.1px;
+      transition: background .15s, transform .1s, box-shadow .15s;
+      box-shadow: 0 0 28px rgba(42,171,179,.38);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-hero:hover {
+      background: var(--color-accent-hover);
+      box-shadow: 0 0 40px rgba(42,171,179,.48);
+    }
+    .btn-hero:active { transform: scale(.97); }
+    .btn-hero-secondary {
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 6px 0;
+      border-bottom: 1px solid transparent;
+      transition: color .15s, border-color .15s;
+    }
+    .btn-hero-secondary:hover { color: var(--text-primary); border-color: var(--border-light); }
+    .hero__note {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ─── Simulator proof block ─── */
+    .simulator-proof {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 80px 20px;
+    }
+    .simulator-proof .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    @media (max-width: 700px) {
+      .simulator-proof .container { grid-template-columns: 1fr; gap: 40px; }
+      .simulator-proof .sim-mockup { order: -1; }
+    }
+
+    /* Exam mockup */
+    .sim-mockup {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: 0 8px 48px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.05);
+    }
+    .sim-mockup__header {
+      background: var(--bg-base);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sim-mockup__subject {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+    .sim-mockup__timer {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--color-accent);
+    }
+    .sim-mockup__body { padding: 20px; }
+    .sim-mockup__progress {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .sim-mockup__progress-bar {
+      flex: 1;
+      height: 4px;
+      background: var(--bg-base);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .sim-mockup__progress-fill {
+      height: 100%;
+      width: 44%;
+      background: var(--color-accent);
+      border-radius: 2px;
+    }
+    .sim-mockup__progress-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .sim-mockup__task-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-accent);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 8px;
+    }
+    .sim-mockup__question {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .sim-mockup__options { display: flex; flex-direction: column; gap: 8px; }
+    .sim-mockup__option {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: default;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sim-mockup__option--selected {
+      border-color: var(--color-accent-border);
+      background: var(--color-accent-dim);
+      color: var(--text-primary);
+    }
+    .sim-mockup__option-letter {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .sim-mockup__option--selected .sim-mockup__option-letter {
+      background: var(--color-accent);
+      color: #fff;
+    }
+    .sim-mockup__footer {
+      border-top: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sim-mockup__nav-btn {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 13px;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+    }
+    .sim-mockup__nav-btn--next {
+      background: var(--color-accent);
+      border-color: var(--color-accent);
+      color: #fff;
+    }
+
+    /* Proof tezises */
+    .sim-tezises {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .sim-tezis {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      transition: background .2s;
+    }
+    .sim-tezis:hover { background: var(--bg-elevated); }
+    .sim-tezis__icon {
+      width: 40px; height: 40px;
+      background: var(--color-accent-dim);
+      border: 1px solid var(--color-accent-border);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .sim-tezis__title {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 3px;
+    }
+    .sim-tezis__desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ─── Value strip (replaces fake stats) ─── */
+    .value-strip {
+      background: var(--bg-base);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .value-strip .container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+    .value-item {
+      padding: 28px 20px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .value-item:last-child { border-right: none; }
+    .value-item__icon { font-size: 24px; margin-bottom: 8px; }
+    .value-item__label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+    @media (max-width: 640px) {
+      .value-strip .container { grid-template-columns: 1fr 1fr; }
+      .value-item:nth-child(2) { border-right: none; }
+      .value-item:nth-child(n+3) { border-top: 1px solid var(--border); }
+    }
+
+    /* ─── How it works ─── */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 48px;
+      position: relative;
+    }
+    .step {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .step__number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--color-accent);
+      text-transform: uppercase;
+    }
+    .step__icon {
+      width: 44px; height: 44px;
+      background: var(--color-accent-dim);
+      border: 1px solid var(--color-accent-border);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step__icon svg { width: 22px; height: 22px; color: var(--color-accent); }
+    .step__title {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    .step__desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .step__time {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: auto;
+    }
+
+    /* ─── Features ─── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 48px;
+    }
+    .feat {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: border-color .2s;
+    }
+    .feat:hover { border-color: var(--color-accent-border); }
+    .feat__icon {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .feat__title {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    .feat__desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .feat--pro .feat__title::after {
+      content: 'PRO';
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--color-pro-dim);
+      color: var(--color-pro);
+      border: 1px solid rgba(155,109,255,.3);
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin-left: 8px;
+      vertical-align: middle;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ─── Pricing ─── */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 48px;
+      align-items: start;
+    }
+    .plan {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .plan--popular {
+      border-color: var(--color-accent-border);
+      background: var(--bg-elevated);
+      position: relative;
+    }
+    .plan__badge {
+      position: absolute;
+      top: -13px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--color-accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+    .plan__name {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+    }
+    .plan__price {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .plan__price-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+    .plan__price-period {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .plan__price-annual {
+      font-size: 12px;
+      color: var(--color-accent);
+      margin-top: 4px;
+    }
+    .plan__divider { height: 1px; background: var(--border); }
+    .plan__features { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+    .plan__feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    .plan__feature-check {
+      width: 18px; height: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .plan__feature-check--on  { color: var(--color-accent); }
+    .plan__feature-check--off { color: var(--text-muted); opacity: .5; }
+    .plan__cta {
+      display: block;
+      text-align: center;
+      padding: 13px 20px;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 700;
+      transition: background .15s, transform .1s;
+    }
+    .plan__cta--outline {
+      background: transparent;
+      border: 1.5px solid var(--border-light);
+      color: var(--text-secondary);
+    }
+    .plan__cta--outline:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+    .plan__cta--accent {
+      background: var(--color-accent);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(42,171,179,.3);
+    }
+    .plan__cta--accent:hover { background: var(--color-accent-hover); }
+    .plan__cta:active { transform: scale(.97); }
+
+    /* ─── Parent section ─── */
+    .parent {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .parent .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+    @media (max-width: 640px) {
+      .parent .container { grid-template-columns: 1fr; gap: 40px; }
+    }
+    .parent__visual {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .parent__visual-title {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+    .parent__child-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .parent__child-info { display: flex; align-items: center; gap: 10px; }
+    .parent__child-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .parent__child-name { font-size: 14px; font-weight: 600; }
+    .parent__child-sub  { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+    .parent__progress-col { text-align: right; }
+    .parent__progress-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-accent);
+    }
+    .parent__progress-bar {
+      height: 4px;
+      background: var(--bg-base);
+      border-radius: 2px;
+      margin-top: 6px;
+      width: 80px;
+      overflow: hidden;
+    }
+    .parent__progress-fill {
+      height: 100%;
+      background: var(--color-accent);
+      border-radius: 2px;
+    }
+    .parent__points { display: flex; flex-direction: column; gap: 10px; }
+    .parent__point {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    .parent__point-icon {
+      width: 32px; height: 32px;
+      background: var(--color-accent-dim);
+      border: 1px solid var(--color-accent-border);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ─── Demo block ─── */
+    .demo-section {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .demo-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      max-width: 680px;
+      margin: 40px auto 0;
+    }
+    .demo-card__question-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-accent);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 12px;
+    }
+    .demo-card__question {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .demo-card__options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+    .demo-option {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: border-color .15s, background .15s, color .15s;
+      text-align: left;
+      width: 100%;
+    }
+    .demo-option:hover {
+      border-color: var(--color-accent-border);
+      background: var(--color-accent-dim);
+      color: var(--text-primary);
+    }
+    .demo-option.selected {
+      border-color: var(--color-accent-border);
+      background: var(--color-accent-dim);
+      color: var(--text-primary);
+    }
+    .demo-option.correct { border-color: #22C55E; background: rgba(34,197,94,.12); color: var(--text-primary); }
+    .demo-option.wrong { border-color: #EF4444; background: rgba(239,68,68,.1); }
+    .demo-option__letter {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--bg-base);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .demo-option.selected .demo-option__letter,
+    .demo-option.correct .demo-option__letter {
+      background: var(--color-accent);
+      color: #fff;
+    }
+    .demo-card__result {
+      display: none;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .demo-card__result.visible { display: block; }
+    .demo-card__result strong { color: var(--text-primary); }
+    .demo-card__footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .demo-card__hint { font-size: 13px; color: var(--text-muted); }
+    .btn-demo {
+      background: var(--color-accent);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      transition: background .15s;
+    }
+    .btn-demo:hover { background: var(--color-accent-hover); }
+
+    /* ─── Final CTA ─── */
+    .cta-section { text-align: center; }
+    .cta-section .section-title { max-width: 640px; margin: 0 auto 12px; }
+    .cta-section .section-sub { margin: 0 auto 40px; }
+
+    .reg-form {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      max-width: 440px;
+      margin: 0 auto;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+    .form-group input, .form-group select {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-light);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      outline: none;
+      transition: border-color .15s;
+    }
+    .form-group input::placeholder { color: var(--text-muted); }
+    .form-group input:focus, .form-group select:focus { border-color: var(--color-accent); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 420px) { .form-row { grid-template-columns: 1fr; } }
+    .btn-form {
+      background: var(--color-accent);
+      color: #fff;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      width: 100%;
+      transition: background .15s, transform .1s;
+      box-shadow: 0 0 20px rgba(42,171,179,.25);
+    }
+    .btn-form:hover { background: var(--color-accent-hover); }
+    .btn-form:active { transform: scale(.98); }
+    .reg-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    .reg-divider::before, .reg-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .oauth-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-oauth {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-light);
+      color: var(--text-secondary);
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .btn-oauth:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .btn-oauth svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .reg-terms {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+    .reg-terms a { color: var(--color-accent); border-bottom: 1px solid transparent; }
+    .reg-terms a:hover { border-bottom-color: var(--color-accent); }
+
+    /* ─── Footer ─── */
+    .footer { border-top: 1px solid var(--border); padding: 32px 20px; text-align: center; }
+    .footer__inner { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .footer__links { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+    .footer__links a { font-size: 13px; color: var(--text-muted); transition: color .15s; }
+    .footer__links a:hover { color: var(--text-secondary); }
+    .footer__copy { font-size: 12px; color: var(--text-muted); }
+
+    /* ─── Toast ─── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--bg-elevated);
+      border: 1px solid var(--color-accent-border);
+      border-radius: var(--radius-md);
+      padding: 14px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 200;
+      opacity: 0;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+      white-space: nowrap;
+      box-shadow: var(--shadow-card);
+    }
+    .toast--visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast__icon { color: var(--color-accent); font-size: 18px; }
+  </style>
+</head>
+<body>
+
+<!-- ─── Navbar ─── -->
+<nav class="navbar">
+  <a href="#" class="navbar__logo">Репетитор ОГЭ</a>
+  <div class="navbar__actions">
+    <button class="btn-ghost" onclick="scrollToReg()">Войти</button>
+    <button class="btn-primary" onclick="scrollToReg()">Начать бесплатно</button>
+    <button class="navbar__menu-btn" aria-label="Меню">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <rect y="4" width="20" height="2" rx="1" fill="currentColor"/>
+        <rect y="9" width="20" height="2" rx="1" fill="currentColor"/>
+        <rect y="14" width="20" height="2" rx="1" fill="currentColor"/>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ─── HERO ─── -->
+<section class="hero">
+  <div class="hero__glow"></div>
+
+  <div class="hero__badge">
+    <span class="hero__badge-dot"></span>
+    Онлайн-симулятор ОГЭ по ФИПИ
+  </div>
+
+  <h1 class="hero__title">
+    Узнай свой реальный уровень<br /><em>до экзамена</em>
+  </h1>
+  <p class="hero__sub">
+    Таймер как на экзамене, задания в структуре ФИПИ, анализ слабых тем и понятный план подготовки — сразу после прохождения.
+  </p>
+
+  <div class="hero__chips">
+    <span class="hero__chip"><span class="hero__chip-dot"></span>Реальный тайминг</span>
+    <span class="hero__chip"><span class="hero__chip-dot"></span>Формат ОГЭ по ФИПИ</span>
+    <span class="hero__chip"><span class="hero__chip-dot"></span>Прогноз баллов</span>
+    <span class="hero__chip"><span class="hero__chip-dot"></span>Карта пробелов</span>
+  </div>
+
+  <div class="hero__actions">
+    <a href="app/welcome.html" class="btn-hero" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M9 1.5a7.5 7.5 0 100 15 7.5 7.5 0 000-15zM9 4.5v4.25l2.75 2.75" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Пройти пробный экзамен бесплатно
+    </a>
+    <button class="btn-hero-secondary" onclick="document.getElementById('simulator').scrollIntoView({behavior:'smooth'})">
+      Посмотреть, как проходит экзамен →
+    </button>
+    <span class="hero__note">Без карты. Без подписки. Первая диагностика — 10 минут.</span>
+  </div>
+</section>
+
+<!-- ─── Value strip ─── -->
+<div class="value-strip">
+  <div class="container">
+    <div class="value-item">
+      <div class="value-item__icon">⏱️</div>
+      <div class="value-item__label">Реальный тайминг<br />экзамена</div>
+    </div>
+    <div class="value-item">
+      <div class="value-item__icon">📋</div>
+      <div class="value-item__label">Структура заданий<br />по логике ФИПИ</div>
+    </div>
+    <div class="value-item">
+      <div class="value-item__icon">🎯</div>
+      <div class="value-item__label">Прогноз оценки<br />после пробника</div>
+    </div>
+    <div class="value-item">
+      <div class="value-item__icon">🗺️</div>
+      <div class="value-item__label">Карта пробелов<br />по темам</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Simulator proof ─── -->
+<section class="simulator-proof" id="simulator">
+  <div class="container">
+    <div class="sim-mockup">
+      <div class="sim-mockup__header">
+        <span class="sim-mockup__subject">Математика · ОГЭ</span>
+        <span class="sim-mockup__timer">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M7 4v3l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          3:14:22
+        </span>
+      </div>
+      <div class="sim-mockup__body">
+        <div class="sim-mockup__progress">
+          <div class="sim-mockup__progress-bar">
+            <div class="sim-mockup__progress-fill"></div>
+          </div>
+          <span class="sim-mockup__progress-text">11 / 25</span>
+        </div>
+        <div class="sim-mockup__task-num">Задание 11</div>
+        <div class="sim-mockup__question">
+          На координатной прямой отмечены точки А и В. Найдите расстояние от точки А до точки В, если А(−3) и В(7).
+        </div>
+        <div class="sim-mockup__options">
+          <div class="sim-mockup__option">
+            <span class="sim-mockup__option-letter">А</span> 4
+          </div>
+          <div class="sim-mockup__option sim-mockup__option--selected">
+            <span class="sim-mockup__option-letter">Б</span> 10
+          </div>
+          <div class="sim-mockup__option">
+            <span class="sim-mockup__option-letter">В</span> −10
+          </div>
+          <div class="sim-mockup__option">
+            <span class="sim-mockup__option-letter">Г</span> 21
+          </div>
+        </div>
+      </div>
+      <div class="sim-mockup__footer">
+        <button class="sim-mockup__nav-btn">← Назад</button>
+        <button class="sim-mockup__nav-btn sim-mockup__nav-btn--next">Далее →</button>
+      </div>
+    </div>
+
+    <div>
+      <span class="section-label">Как выглядит симулятор</span>
+      <h2 class="section-title" style="margin-bottom:8px;">Максимально близко<br />к реальному ОГЭ</h2>
+      <p class="section-sub" style="margin-bottom:28px;">Ученик заранее привыкает к формату, времени, структуре заданий и своему темпу — до настоящего экзамена.</p>
+
+      <div class="sim-tezises">
+        <div class="sim-tezis">
+          <div class="sim-tezis__icon">⏱️</div>
+          <div>
+            <div class="sim-tezis__title">Таймер как на реальном экзамене</div>
+            <div class="sim-tezis__desc">Отсчёт времени идёт в точном соответствии с регламентом ОГЭ. Учишься управлять темпом заранее.</div>
+          </div>
+        </div>
+        <div class="sim-tezis">
+          <div class="sim-tezis__icon">📐</div>
+          <div>
+            <div class="sim-tezis__title">Структура заданий в логике ОГЭ</div>
+            <div class="sim-tezis__desc">Части, типы заданий и порядок — как на настоящем варианте. Никаких сюрпризов в день экзамена.</div>
+          </div>
+        </div>
+        <div class="sim-tezis">
+          <div class="sim-tezis__icon">📊</div>
+          <div>
+            <div class="sim-tezis__title">Понятный расчёт результата</div>
+            <div class="sim-tezis__desc">После прохождения — первичный балл, прогноз оценки и сравнение с порогами ОГЭ.</div>
+          </div>
+        </div>
+        <div class="sim-tezis">
+          <div class="sim-tezis__icon">🔍</div>
+          <div>
+            <div class="sim-tezis__title">Разбор ошибок и слабых тем</div>
+            <div class="sim-tezis__desc">Видишь не просто "неверно", а где именно теряются баллы — по каждой теме и типу задания.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── How it works ─── -->
+<section class="section--sm section" style="background:var(--bg-surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="container">
+    <span class="section-label">Как это работает</span>
+    <h2 class="section-title">Три шага до ясного плана</h2>
+    <p class="section-sub">Не надо гадать, что учить. Симулятор скажет сам.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step__number">Шаг 01</div>
+        <div class="step__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+            <path d="M9 12h6M9 16h4"/>
+          </svg>
+        </div>
+        <div class="step__title">Пройди пробный экзамен</div>
+        <p class="step__desc">Запускаешь симуляцию ОГЭ с таймером и заданиями в логике реального экзамена. Это не хаотичный тест, а понятная проверка текущего уровня.</p>
+        <span class="step__time">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M7 4v3.5l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          ~10–235 минут
+        </span>
+      </div>
+
+      <div class="step">
+        <div class="step__number">Шаг 02</div>
+        <div class="step__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+        </div>
+        <div class="step__title">Получи карту слабых тем</div>
+        <p class="step__desc">Система показывает, где именно теряются баллы: по темам, типам заданий и уровню сложности. Сразу видно, что мешает получить нужную оценку.</p>
+        <span class="step__time">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M7 4v3.5l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Мгновенно
+        </span>
+      </div>
+
+      <div class="step">
+        <div class="step__number">Шаг 03</div>
+        <div class="step__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <div class="step__title">Тренируйся точечно</div>
+        <p class="step__desc">Дальше ты не гадаешь, что учить. Приложение даёт приоритетные темы, практику, разбор ошибок и понятный маршрут роста.</p>
+        <span class="step__time">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M7 4v3.5l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          По 20–30 минут в день
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Features ─── -->
+<section class="section">
+  <div class="container">
+    <span class="section-label">Инструменты</span>
+    <h2 class="section-title">Всё завязано на результате</h2>
+    <p class="section-sub">Каждый инструмент помогает поднять балл — не просто "есть функция".</p>
+
+    <div class="features-grid">
+      <div class="feat">
+        <div class="feat__icon" style="background:var(--color-accent-dim);">🗺️</div>
+        <div class="feat__title">Карта пробелов</div>
+        <p class="feat__desc">После пробника видишь точную картину: какие темы просели, сколько баллов теряешь и что исправить в первую очередь.</p>
+      </div>
+
+      <div class="feat feat--pro">
+        <div class="feat__icon" style="background:var(--color-pro-dim);">🤖</div>
+        <div class="feat__title">ИИ-разбор ошибок</div>
+        <p class="feat__desc">После задачи видишь не просто правильный ответ, а короткое объяснение, где сбился и как не потерять этот балл снова.</p>
+      </div>
+
+      <div class="feat feat--pro">
+        <div class="feat__icon" style="background:var(--color-pro-dim);">📋</div>
+        <div class="feat__title">Умные шпаргалки</div>
+        <p class="feat__desc">Шпаргалка генерируется по твоим слабым темам. Открыл — повторил именно то, что нужно перед экзаменом.</p>
+      </div>
+
+      <div class="feat feat--pro">
+        <div class="feat__icon" style="background:rgba(255,154,60,.15);">💬</div>
+        <div class="feat__title">ИИ-репетитор в чате</div>
+        <p class="feat__desc">Застрял на задаче — спроси. Объяснит по шагам, предложит похожую и проверит, понял ли ты. Без ожидания живого репетитора.</p>
+      </div>
+
+      <div class="feat">
+        <div class="feat__icon" style="background:rgba(59,130,246,.15);">📝</div>
+        <div class="feat__title">Полные варианты ОГЭ</div>
+        <p class="feat__desc">Решай полноценные пробники с таймером и привыкай к нагрузке до реального экзамена. Чем чаще — тем спокойнее в день X.</p>
+      </div>
+
+      <div class="feat">
+        <div class="feat__icon" style="background:rgba(34,197,94,.15);">📈</div>
+        <div class="feat__title">Дневник прогресса</div>
+        <p class="feat__desc">Видишь, как растёт прогноз балла от недели к неделе. Это мотивирует продолжать — результат становится ощутимым.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Pricing ─── -->
+<section class="section--sm section" id="pricing" style="background:var(--bg-surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="container">
+    <span class="section-label">Тарифы</span>
+    <h2 class="section-title">Начни бесплатно, расти дальше</h2>
+    <p class="section-sub">Диагностика и карта пробелов — бесплатно. PRO открывает полную подготовку.</p>
+
+    <div class="pricing-grid">
+      <!-- FREE -->
+      <div class="plan">
+        <div>
+          <div class="plan__name">Free</div>
+          <div class="plan__price">
+            <span class="plan__price-val">0</span>
+            <span class="plan__price-period">₽</span>
+          </div>
+          <div class="plan__price-annual" style="color:var(--text-muted);">Всегда бесплатно</div>
+        </div>
+        <div class="plan__divider"></div>
+        <ul class="plan__features">
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--on" viewBox="0 0 18 18" fill="none"><path d="M3.5 9l4 4 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Входная диагностика
+          </li>
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--on" viewBox="0 0 18 18" fill="none"><path d="M3.5 9l4 4 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Карта слабых тем
+          </li>
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--on" viewBox="0 0 18 18" fill="none"><path d="M3.5 9l4 4 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            До 10 задач в день
+          </li>
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--on" viewBox="0 0 18 18" fill="none"><path d="M3.5 9l4 4 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Базовый прогресс
+          </li>
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--off" viewBox="0 0 18 18" fill="none"><path d="M5 5l8 8M13 5l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span style="opacity:.5;">ИИ-разбор ошибок</span>
+          </li>
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--off" viewBox="0 0 18 18" fill="none"><path d="M5 5l8 8M13 5l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span style="opacity:.5;">Полные варианты ОГЭ</span>
+          </li>
+        </ul>
+        <button class="plan__cta plan__cta--outline" onclick="scrollToReg()">Начать бесплатно</button>
+      </div>
+
+      <!-- PRO -->
+      <div class="plan plan--popular">
+        <div class="plan__badge">Основной</div>
+        <div>
+          <div class="plan__name" style="color:var(--color-accent);">Pro</div>
+          <div class="plan__price">
+            <span class="plan__price-val" style="color:var(--color-accent);">890</span>
+            <span class="plan__price-period">₽/мес</span>
+          </div>
+          <div class="plan__price-annual">или 6 990 ₽/год — экономия 2 месяца</div>
+        </div>
+        <div class="plan__divider"></div>
+        <ul class="plan__features">
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--on" viewBox="0 0 18 18" fill="none"><path d="M3.5 9l4 4 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Всё из Free
+          </li>
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--on" viewBox="0 0 18 18" fill="none"><path d="M3.5 9l4 4 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Неограниченная практика
+          </li>
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--on" viewBox="0 0 18 18" fill="none"><path d="M3.5 9l4 4 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            ИИ-разбор каждой ошибки
+          </li>
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--on" viewBox="0 0 18 18" fill="none"><path d="M3.5 9l4 4 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Умные шпаргалки
+          </li>
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--on" viewBox="0 0 18 18" fill="none"><path d="M3.5 9l4 4 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            ИИ-репетитор в чате
+          </li>
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--on" viewBox="0 0 18 18" fill="none"><path d="M3.5 9l4 4 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Полные варианты ОГЭ с таймером
+          </li>
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--on" viewBox="0 0 18 18" fill="none"><path d="M3.5 9l4 4 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Прогноз балла и маршрут подготовки
+          </li>
+        </ul>
+        <button class="plan__cta plan__cta--accent" onclick="scrollToReg()">Попробовать PRO</button>
+      </div>
+
+      <!-- СЕМЬЯ -->
+      <div class="plan">
+        <div>
+          <div class="plan__name">Семья</div>
+          <div class="plan__price">
+            <span class="plan__price-val">1 390</span>
+            <span class="plan__price-period">₽/мес</span>
+          </div>
+          <div class="plan__price-annual" style="color:var(--color-pro);">до 3 детей · экономия на каждом</div>
+        </div>
+        <div class="plan__divider"></div>
+        <ul class="plan__features">
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--on" viewBox="0 0 18 18" fill="none"><path d="M3.5 9l4 4 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Всё из PRO
+          </li>
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--on" viewBox="0 0 18 18" fill="none"><path d="M3.5 9l4 4 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            До 3 учеников
+          </li>
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--on" viewBox="0 0 18 18" fill="none"><path d="M3.5 9l4 4 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Кабинет родителя
+          </li>
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--on" viewBox="0 0 18 18" fill="none"><path d="M3.5 9l4 4 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Уведомления о занятиях
+          </li>
+          <li class="plan__feature">
+            <svg class="plan__feature-check plan__feature-check--on" viewBox="0 0 18 18" fill="none"><path d="M3.5 9l4 4 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Прогресс и прогноз по каждому ребёнку
+          </li>
+        </ul>
+        <button class="plan__cta plan__cta--outline" onclick="scrollToReg()">Подключить семью</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Parent section ─── -->
+<section class="section parent">
+  <div class="container">
+    <div class="parent__visual">
+      <div class="parent__visual-title">Кабинет родителя</div>
+
+      <div class="parent__child-row">
+        <div class="parent__child-info">
+          <div class="parent__child-avatar" style="background:#3B82F6;color:#fff;">М</div>
+          <div>
+            <div class="parent__child-name">Маша</div>
+            <div class="parent__child-sub">9 класс · Математика ОГЭ</div>
+          </div>
+        </div>
+        <div class="parent__progress-col">
+          <div class="parent__progress-val">26 б. → прогноз 31</div>
+          <div class="parent__progress-bar">
+            <div class="parent__progress-fill" style="width:72%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="parent__child-row">
+        <div class="parent__child-info">
+          <div class="parent__child-avatar" style="background:#9B6DFF;color:#fff;">А</div>
+          <div>
+            <div class="parent__child-name">Антон</div>
+            <div class="parent__child-sub">9 класс · Русский язык ОГЭ</div>
+          </div>
+        </div>
+        <div class="parent__progress-col">
+          <div class="parent__progress-val">30 б. → прогноз 34</div>
+          <div class="parent__progress-bar">
+            <div class="parent__progress-fill" style="width:58%;background:var(--color-pro);"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:1px;background:var(--border);"></div>
+
+      <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:120px;background:var(--bg-base);border-radius:var(--radius-sm);padding:14px;">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;">Занятий на неделе</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--text-primary);">9</div>
+        </div>
+        <div style="flex:1;min-width:120px;background:var(--bg-base);border-radius:var(--radius-sm);padding:14px;">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;">Рост прогноза за месяц</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--color-accent);">+5 б.</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <span class="section-label">Для родителей</span>
+      <h2 class="section-title">Ты видишь прогресс — без скандалов</h2>
+      <p class="section-sub" style="margin-bottom:28px;">Не нужно требовать отчёты и стоять над душой. Всё видно в одном экране.</p>
+
+      <div class="parent__points">
+        <div class="parent__point">
+          <div class="parent__point-icon">📊</div>
+          <div>
+            <strong>Реальные цифры.</strong> Видно, сколько ребёнок реально занимается и растёт ли прогноз балла — без слов "я готовился".
+          </div>
+        </div>
+        <div class="parent__point">
+          <div class="parent__point-icon">🔍</div>
+          <div>
+            <strong>Слабые темы.</strong> Видно, где именно пробелы — и можно помочь разобраться прицельно, а не заставлять учить всё подряд.
+          </div>
+        </div>
+        <div class="parent__point">
+          <div class="parent__point-icon">🔔</div>
+          <div>
+            <strong>Уведомления.</strong> Если ребёнок не занимался три дня — придёт сигнал. Без слежки, но с контролем.
+          </div>
+        </div>
+        <div class="parent__point">
+          <div class="parent__point-icon">💸</div>
+          <div>
+            <strong>Дешевле репетитора.</strong> Тариф Семья — меньше стоимости одного урока в месяц. При этом ребёнок занимается каждый день.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Demo block ─── -->
+<section class="section demo-section">
+  <div class="container" style="text-align:center;">
+    <span class="section-label">Попробуй прямо сейчас</span>
+    <h2 class="section-title">Один пример задания — вживую</h2>
+    <p class="section-sub" style="margin:0 auto;">Не верь на слово — посмотри, как выглядит симулятор. Вот реальное задание из ОГЭ по математике:</p>
+
+    <div class="demo-card">
+      <div class="demo-card__question-label">Задание 4 · Математика · Часть 1</div>
+      <div class="demo-card__question">
+        Велосипедист проехал 48 км за 3 часа. С какой скоростью он ехал, если первые 2 часа ехал со скоростью 14 км/ч?
+      </div>
+      <div class="demo-card__options" id="demo-options">
+        <button class="demo-option" onclick="selectDemo(this, false)">
+          <span class="demo-option__letter">А</span> 14 км/ч
+        </button>
+        <button class="demo-option" onclick="selectDemo(this, false)">
+          <span class="demo-option__letter">Б</span> 16 км/ч
+        </button>
+        <button class="demo-option" onclick="selectDemo(this, true)">
+          <span class="demo-option__letter">В</span> 20 км/ч
+        </button>
+        <button class="demo-option" onclick="selectDemo(this, false)">
+          <span class="demo-option__letter">Г</span> 24 км/ч
+        </button>
+      </div>
+      <div class="demo-card__result" id="demo-result">
+        <strong>Верно: 20 км/ч.</strong> За первые 2 часа велосипедист проехал 2 × 14 = 28 км. Оставшееся расстояние: 48 − 28 = 20 км за 1 час. Скорость = 20 км/ч.
+      </div>
+      <div class="demo-card__footer">
+        <span class="demo-card__hint">Выбери ответ и увидишь разбор</span>
+        <a href="app/welcome.html" class="btn-demo" style="text-decoration:none;">Пройти полный пробник →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Final CTA ─── -->
+<section class="section cta-section" id="register">
+  <div class="container">
+    <span class="section-label">Начать</span>
+    <h2 class="section-title">Пойми, что реально мешает сдать ОГЭ выше</h2>
+    <p class="section-sub">10 минут на входную диагностику — и вместо хаотичной подготовки у тебя будет понятная карта действий.</p>
+
+    <div class="reg-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="reg-name">Имя</label>
+          <input type="text" id="reg-name" placeholder="Маша" autocomplete="given-name" />
+        </div>
+        <div class="form-group">
+          <label for="reg-grade">Класс</label>
+          <select id="reg-grade">
+            <option value="">Выбери</option>
+            <option value="9">9 класс (ОГЭ)</option>
+            <option value="11">11 класс (ЕГЭ)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="reg-email">Электронная почта</label>
+        <input type="email" id="reg-email" placeholder="masha@example.com" autocomplete="email" />
+      </div>
+
+      <div class="form-group">
+        <label for="reg-pass">Пароль</label>
+        <input type="password" id="reg-pass" placeholder="Минимум 8 символов" autocomplete="new-password" />
+      </div>
+
+      <button class="btn-form" onclick="handleRegister()">Пройти пробный экзамен бесплатно →</button>
+
+      <div class="reg-divider">или войди через</div>
+
+      <div class="oauth-row">
+        <button class="btn-oauth" onclick="handleOAuth('Google')">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          Google
+        </button>
+        <button class="btn-oauth" onclick="handleOAuth('ВКонтакте')">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M15.07 2H8.93C3.33 2 2 3.33 2 8.93v6.14C2 20.67 3.33 22 8.93 22h6.14C20.67 22 22 20.67 22 15.07V8.93C22 3.33 20.67 2 15.07 2zm2.62 13.5h-1.37c-.52 0-.68-.42-1.6-1.35-.81-.78-1.17-.89-1.37-.89-.28 0-.36.08-.36.47v1.23c0 .34-.11.54-1.01.54-1.49 0-3.14-.9-4.3-2.57C6.07 10.97 5.56 9.16 5.56 8.79c0-.2.08-.39.47-.39h1.37c.35 0 .48.16.61.54.68 1.9 1.82 3.56 2.29 3.56.18 0 .26-.08.26-.52V9.85c-.06-1.01-.59-1.1-.59-1.46 0-.17.14-.35.37-.35h2.15c.29 0 .4.15.4.48v2.59c0 .29.13.39.21.39.18 0 .33-.1.66-.43 1.02-1.14 1.74-2.9 1.74-2.9.1-.2.27-.39.62-.39h1.37c.41 0 .5.21.41.48-.17.79-1.84 3.15-1.84 3.15-.14.23-.2.34 0 .6.15.2.63.62.95 1 .59.67 1.04 1.23 1.16 1.62.13.39-.08.59-.47.59z" fill="#4C75A3"/>
+          </svg>
+          ВКонтакте
+        </button>
+      </div>
+
+      <p class="reg-terms">
+        Без карты и подписки. Результат сразу после прохождения.<br />
+        <a href="#">Условия</a> · <a href="#">Политика конфиденциальности</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Footer ─── -->
+<footer class="footer">
+  <div class="footer__inner">
+    <div style="font-weight:700;font-size:16px;">Репетитор ОГЭ</div>
+    <div class="footer__links">
+      <a href="#">О проекте</a>
+      <a href="#pricing">Тарифы</a>
+      <a href="#simulator">Как работает</a>
+      <a href="#">Поддержка</a>
+      <a href="#">Политика конфиденциальности</a>
+    </div>
+    <p class="footer__copy">© 2025 Репетитор ОГЭ. Онлайн-симулятор.</p>
+  </div>
+</footer>
+
+<!-- ─── Toast ─── -->
+<div class="toast" id="toast">
+  <span class="toast__icon">✓</span>
+  <span id="toast-msg">Добро пожаловать! Начинаем диагностику.</span>
+</div>
+
+<script>
+  function scrollToReg() {
+    document.getElementById('register').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => document.getElementById('reg-name').focus(), 600);
+  }
+
+  function handleRegister() {
+    const name  = document.getElementById('reg-name').value.trim();
+    const grade = document.getElementById('reg-grade').value;
+    const email = document.getElementById('reg-email').value.trim();
+    const pass  = document.getElementById('reg-pass').value;
+
+    if (!name)  { shake('reg-name');  return; }
+    if (!grade) { shake('reg-grade'); return; }
+    if (!email || !email.includes('@')) { shake('reg-email'); return; }
+    if (pass.length < 8) { shake('reg-pass'); return; }
+
+    showToast(`Добро пожаловать, ${name}! Начинаем диагностику.`);
+    setTimeout(() => { window.location.href = 'app/welcome.html'; }, 1200);
+  }
+
+  function handleOAuth(provider) {
+    showToast(`Вход через ${provider}…`);
+    setTimeout(() => { window.location.href = 'app/welcome.html'; }, 1000);
+  }
+
+  function shake(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.borderColor = '#EF4444';
+    el.offsetHeight;
+    el.style.animation = 'shake .3s ease';
+    el.focus();
+    setTimeout(() => { el.style.borderColor = ''; el.style.animation = ''; }, 600);
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    toast.classList.add('toast--visible');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => toast.classList.remove('toast--visible'), 3500);
+  }
+
+  /* Demo задание */
+  let demoAnswered = false;
+  function selectDemo(btn, isCorrect) {
+    if (demoAnswered) return;
+    demoAnswered = true;
+    const options = document.querySelectorAll('.demo-option');
+    options.forEach(o => o.style.pointerEvents = 'none');
+    if (isCorrect) {
+      btn.classList.add('correct');
+    } else {
+      btn.classList.add('wrong');
+      options.forEach(o => {
+        if (o.getAttribute('onclick').includes('true')) o.classList.add('correct');
+      });
+    }
+    document.getElementById('demo-result').classList.add('visible');
+  }
+
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+  `;
+  document.head.appendChild(style);
+</script>
+</body>
+</html>

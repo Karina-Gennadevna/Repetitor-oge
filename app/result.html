@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Результат — Репетитор ОГЭ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0D0F11;
+      --bg-1:         #111318;
+      --bg-2:         #161920;
+      --bg-3:         #1C1F27;
+      --border:       rgba(255,255,255,0.07);
+      --border-2:     rgba(255,255,255,0.12);
+      --text:         #F1F5F9;
+      --text-2:       #E2E8F0;
+      --text-muted:   #94A3B8;
+      --text-dim:     #4E5A6E;
+      --accent:       #6366F1;
+      --accent-light: #818CF8;
+      --accent-bg:    rgba(99,102,241,0.1);
+      --accent-bd:    rgba(99,102,241,0.28);
+      --green:        #34D399;
+      --green-bg:     rgba(52,211,153,0.08);
+      --green-bd:     rgba(52,211,153,0.25);
+      --amber:        #F59E0B;
+      --amber-bg:     rgba(245,158,11,0.08);
+      --error:        #F87171;
+      --error-bg:     rgba(248,113,113,0.08);
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      position: sticky;
+      top: 0;
+      height: 56px;
+      background: rgba(13,15,17,0.96);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 12px; }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+      flex-shrink: 0;
+    }
+    .back-btn:hover { border-color: var(--border-2); color: var(--text); }
+    .back-btn svg { width: 16px; height: 16px; }
+
+    .header-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-2);
+      letter-spacing: -0.01em;
+    }
+
+    .header-chip {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+    }
+
+    /* ─── PAGE ─── */
+    .page {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ─── SCORE HERO ─── */
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .ring-wrap {
+      position: relative;
+      width: 180px;
+      height: 180px;
+    }
+
+    .ring-svg {
+      transform: rotate(-90deg);
+      width: 180px;
+      height: 180px;
+    }
+
+    .ring-track {
+      fill: none;
+      stroke: var(--bg-2);
+      stroke-width: 10;
+    }
+
+    .ring-fill {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-dasharray: 471.24; /* 2π×75 */
+      stroke-dashoffset: 471.24;
+      transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .ring-fill.green-fill { stroke: var(--green); }
+    .ring-fill.amber-fill { stroke: var(--amber); }
+
+    .ring-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    .ring-num {
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .ring-denom {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-dim);
+    }
+
+    .hero-label {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .hero-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .hero-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .hero-badge {
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 20px;
+      padding: 5px 14px;
+      border: 1px solid var(--border);
+      background: var(--bg-1);
+      color: var(--text-muted);
+    }
+
+    .hero-badge.accent {
+      background: var(--accent-bg);
+      border-color: var(--accent-bd);
+      color: var(--accent-light);
+    }
+
+    /* ─── STATS ─── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-start;
+    }
+
+    .stat-icon {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 4px;
+    }
+
+    .stat-icon svg { width: 16px; height: 16px; }
+
+    .icon-green { background: var(--green-bg); color: var(--green); }
+    .icon-error { background: var(--error-bg); color: var(--error); }
+    .icon-dim   { background: var(--bg-3);     color: var(--text-dim); }
+
+    .stat-val {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    .stat-val.green { color: var(--green); }
+    .stat-val.error { color: var(--error); }
+    .stat-val.dim   { color: var(--text-muted); }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-weight: 500;
+      line-height: 1.3;
+    }
+
+    /* ─── SECTION ─── */
+    .section {
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+
+    /* ─── CHEATSHEET BANNER ─── */
+    .cs-banner {
+      background: var(--bg-1);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 20px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .cs-banner:hover {
+      border-color: var(--accent-bd);
+      background: var(--accent-bg);
+    }
+
+    .cs-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      background: var(--accent-bg);
+      border: 1px solid var(--accent-bd);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--accent-light);
+    }
+
+    .cs-icon svg { width: 24px; height: 24px; }
+
+    .cs-body { flex: 1; min-width: 0; }
+
+    .cs-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      margin-bottom: 3px;
+    }
+
+    .cs-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .cs-arrow {
+      color: var(--text-dim);
+      flex-shrink: 0;
+    }
+
+    .cs-arrow svg { width: 18px; height: 18px; }
+
+    /* ─── TASK LIST (summary) ─── */
+    .task-list {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .task-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .task-row:last-child { border-bottom: none; }
+
+    .task-row-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .task-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .task-row-num { color: var(--text-dim); font-weight: 500; min-width: 28px; }
+    .task-row-ans { font-size: 12px; color: var(--text-muted); }
+
+    .task-tag {
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 20px;
+      padding: 3px 9px;
+    }
+
+    .tag-answered { background: var(--green-bg); color: var(--green); }
+    .tag-skipped  { background: var(--bg-3); color: var(--text-dim); }
+
+    /* ─── CTAs ─── */
+    .ctas {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 15px;
+      border-radius: 12px;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+      letter-spacing: -0.01em;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-light);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px;
+      border-radius: 12px;
+      background: var(--bg-1);
+      border: 1.5px solid var(--border);
+      color: var(--text-muted);
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-secondary:hover { border-color: var(--border-2); color: var(--text); }
+
+    .btn-primary svg,
+    .btn-secondary svg { width: 18px; height: 18px; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 480px) {
+      .page { padding: 28px 16px 64px; }
+      .header { padding: 0 16px; }
+      .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .stat-val { font-size: 18px; }
+      .stat-card { padding: 12px; }
+      .ring-wrap { width: 160px; height: 160px; }
+      .ring-svg { width: 160px; height: 160px; }
+      /* adjust ring for smaller size: r=65, C=408.41 */
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <a class="back-btn" href="../index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </a>
+      <div class="header-title">Результат</div>
+    </div>
+    <div class="header-chip" id="headerChip">Математика</div>
+  </header>
+
+  <!-- PAGE -->
+  <div class="page">
+
+    <!-- SCORE HERO -->
+    <div class="hero">
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 180 180">
+          <circle class="ring-track" cx="90" cy="90" r="75"/>
+          <circle class="ring-fill" id="ringFill" cx="90" cy="90" r="75"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-num" id="ringNum">0</div>
+          <div class="ring-denom" id="ringDenom">из 25</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="hero-label" id="heroLabel">Экзамен завершён</div>
+        <div class="hero-sub" id="heroSub">Посмотри результат и разбери ошибки</div>
+      </div>
+
+      <div class="hero-badges">
+        <div class="hero-badge accent" id="subjectBadge">Математика</div>
+        <div class="hero-badge" id="modeBadge">Полный экзамен</div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon icon-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+        </div>
+        <div class="stat-val green" id="statAnswered">0</div>
+        <div class="stat-label">Отвечено</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon icon-error">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </div>
+        <div class="stat-val error" id="statSkipped">0</div>
+        <div class="stat-label">Пропущено</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon icon-dim">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+        </div>
+        <div class="stat-val dim" id="statTime">—</div>
+        <div class="stat-label">Потрачено</div>
+      </div>
+    </div>
+
+    <!-- CHEATSHEET BANNER -->
+    <div class="section">
+      <div class="section-title">Что дальше</div>
+      <a class="cs-banner" href="cheatsheet.html" id="csBanner">
+        <div class="cs-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+        </div>
+        <div class="cs-body">
+          <div class="cs-title">Шпаргалка по слабым темам</div>
+          <div class="cs-desc" id="csDesc">7 тем, которые стоит разобрать</div>
+        </div>
+        <div class="cs-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M9 6l6 6-6 6"/>
+          </svg>
+        </div>
+      </a>
+    </div>
+
+    <!-- TASKS SUMMARY -->
+    <div class="section" id="taskSection">
+      <div class="section-title">Твои ответы</div>
+      <div class="task-list" id="taskList"></div>
+    </div>
+
+    <!-- CTAs -->
+    <div class="ctas">
+      <a class="btn-primary" href="cheatsheet.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+        Тренировать слабые темы
+      </a>
+      <a class="btn-secondary" href="../index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+        Новый экзамен
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    /* ══════════════════════════════════════════
+       READ STATE
+    ══════════════════════════════════════════ */
+
+    const params  = new URLSearchParams(location.search);
+    const key     = params.get('key');
+    const subject = params.get('subject') || 'math';
+    const mode    = params.get('mode')    || 'full';
+
+    let state = {};
+    try {
+      if (key) state = JSON.parse(localStorage.getItem(key) || '{}');
+    } catch(e) {}
+
+    const total    = state.total    || 25;
+    const maxScore = state.maxScore || 31;
+    const answers  = state.answers  || {};
+    const answered = Object.values(answers).filter(v => v !== '' && v !== null && v !== undefined).length;
+    const skipped  = total - answered;
+    const pct      = Math.round(answered / total * 100);
+
+    // Time spent
+    let timeStr = '—';
+    if (state.startedAt && state.finishedAt) {
+      const sec = Math.floor((state.finishedAt - state.startedAt) / 1000);
+      const h   = Math.floor(sec / 3600);
+      const m   = Math.floor((sec % 3600) / 60);
+      const s   = sec % 60;
+      timeStr = h > 0
+        ? `${h}:${pad(m)}:${pad(s)}`
+        : `${m}:${pad(s)}`;
+    }
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    /* ══════════════════════════════════════════
+       RENDER
+    ══════════════════════════════════════════ */
+
+    // Header & badges
+    const subjectLabel = state.subjectLabel || (subject === 'math' ? 'Математика' : 'Русский язык');
+    const modeLabel    = state.modeLabel    || 'Полный экзамен';
+
+    document.getElementById('headerChip').textContent  = subjectLabel;
+    document.getElementById('subjectBadge').textContent = subjectLabel;
+    document.getElementById('modeBadge').textContent   = modeLabel;
+    document.title = `Результат · ${subjectLabel} — Репетитор ОГЭ`;
+
+    // Hero label
+    const heroLabel = pct >= 80 ? 'Отличный результат!' :
+                      pct >= 50 ? 'Хороший старт' :
+                      pct >= 30 ? 'Есть над чем работать' :
+                                  'Экзамен завершён';
+    const heroSub   = pct >= 80 ? 'Разбери оставшиеся темы и закрепи результат' :
+                      pct >= 50 ? 'Половина задач решена — тренируй слабые темы' :
+                                  'Посмотри шпаргалку — там главные темы для работы';
+
+    document.getElementById('heroLabel').textContent = heroLabel;
+    document.getElementById('heroSub').textContent  = heroSub;
+
+    // Ring color
+    const ringFill = document.getElementById('ringFill');
+    if (pct >= 80) ringFill.classList.add('green-fill');
+    else if (pct >= 50) ringFill.classList.add('amber-fill');
+
+    // Stats
+    document.getElementById('ringDenom').textContent   = `из ${total}`;
+    document.getElementById('statAnswered').textContent = answered;
+    document.getElementById('statSkipped').textContent  = skipped;
+    document.getElementById('statTime').textContent     = timeStr;
+
+    // Ring animation + counter
+    const circumference = 471.24; // 2π×75
+    setTimeout(() => {
+      const offset = circumference - (pct / 100) * circumference;
+      ringFill.style.strokeDashoffset = offset;
+
+      // Animate number
+      const duration = 1000;
+      const start    = performance.now();
+      const target   = answered;
+      function tick(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        document.getElementById('ringNum').textContent = Math.round(ease * target);
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }, 200);
+
+    // Cheatsheet desc
+    document.getElementById('csDesc').textContent =
+      skipped > 0
+        ? `${skipped} задач пропущено — разбери их в шпаргалке`
+        : 'Повтори темы и закрепи знания';
+
+    // Tasks list (first 10 shown)
+    const taskList = document.getElementById('taskList');
+    const showCount = Math.min(total, 10);
+
+    for (let i = 0; i < showCount; i++) {
+      const ans      = answers[i];
+      const hasAns   = ans !== undefined && ans !== '' && ans !== null;
+      const shortAns = hasAns ? String(ans).slice(0, 24) + (String(ans).length > 24 ? '…' : '') : '';
+
+      const row = document.createElement('div');
+      row.className = 'task-row';
+      row.innerHTML = `
+        <div class="task-row-left">
+          <div class="task-dot" style="background:${hasAns ? 'var(--green)' : 'var(--bg-3)'}"></div>
+          <span class="task-row-num">№${i + 1}</span>
+          <span class="task-row-ans">${hasAns ? shortAns : 'Нет ответа'}</span>
+        </div>
+        <span class="task-tag ${hasAns ? 'tag-answered' : 'tag-skipped'}">${hasAns ? 'Отвечено' : 'Пропущено'}</span>
+      `;
+      taskList.appendChild(row);
+    }
+
+    if (total > 10) {
+      const more = document.createElement('div');
+      more.className = 'task-row';
+      more.style.justifyContent = 'center';
+      more.innerHTML = `<span style="font-size:12px;color:var(--text-dim)">+ ещё ${total - 10} заданий</span>`;
+      taskList.appendChild(more);
+    }
+
+    // If no state found — show fallback
+    if (!key && !state.finished) {
+      document.getElementById('heroLabel').textContent = 'Нет данных';
+      document.getElementById('heroSub').textContent = 'Сначала пройди экзамен';
+    }
+  </script>
+</body>
+</html>

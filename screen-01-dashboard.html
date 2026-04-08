@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Дашборд — ОГЭ в кармане</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════════════════
+       DESIGN TOKENS — ОГЭ в кармане v2.0
+       ═══════════════════════════════════════════════════════ */
+    :root {
+      /* Elevation backgrounds — hardcoded hex, no color-mix() */
+      --bg-base:     #0F1015;
+      --bg-surface:  #17181E;
+      --bg-elevated: #1E2028;
+      --bg-floating: #252830;
+      --bg-overlay:  #2D3038;
+
+      /* Accent — Teal */
+      --color-accent:        #2AABB3;
+      --color-accent-hover:  #3DC3CC;
+      --color-accent-subtle: rgba(42, 171, 179, 0.12);
+      --color-accent-border: rgba(42, 171, 179, 0.30);
+
+      /* Text */
+      --text-primary:   #EEEDF0;
+      --text-secondary: #A8A7AF;
+      --text-muted:     #6B6A73;
+      --text-disabled:  #3D3C45;
+
+      /* Semantic */
+      --color-success: #4CC87A;
+      --color-error:   #F0625A;
+      --color-warning: #F5A623;
+      --color-streak:  #FF9A3C;
+      --color-pro:     #9B6DFF;
+
+      /* Borders */
+      --border-subtle:  rgba(255, 255, 255, 0.06);
+      --border-default: rgba(255, 255, 255, 0.10);
+
+      /* Spacing (4px base) */
+      --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;
+      --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
+
+      /* Radius */
+      --radius-sm:   8px;
+      --radius-md:   12px;
+      --radius-lg:   16px;
+      --radius-full: 9999px;
+
+      /* Layout */
+      --navbar-height:    56px;
+      --bottom-nav-height: 64px;
+
+      /* Transitions */
+      --t-fast: 150ms ease;
+      --t-base: 250ms ease;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       RESET & BASE
+       ═══════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+
+    body {
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-weight: 500;
+      line-height: 1.5;
+      min-height: 100dvh;
+      overscroll-behavior: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       APP SHELL
+       ═══════════════════════════════════════════════════════ */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       NAVBAR — glassmorphism
+       ═══════════════════════════════════════════════════════ */
+    .navbar {
+      position: fixed;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 100%; max-width: 480px;
+      height: var(--navbar-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--sp-4);
+      z-index: 100;
+      background: rgba(15, 16, 21, 0.72);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .navbar__logo {
+      display: flex; align-items: center; gap: var(--sp-2);
+      text-decoration: none;
+    }
+
+    .navbar__logo-icon {
+      width: 28px; height: 28px;
+      background: var(--color-accent);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .navbar__logo-text {
+      font-size: 15px; font-weight: 700;
+      color: var(--text-primary); letter-spacing: -0.3px;
+    }
+    .navbar__logo-text span { color: var(--color-accent); }
+
+    .navbar__right { display: flex; align-items: center; gap: var(--sp-3); }
+
+    /* Streak Badge */
+    .streak-badge {
+      display: flex; align-items: center; gap: 5px;
+      background: rgba(255, 154, 60, 0.10);
+      border: 1px solid rgba(255, 154, 60, 0.22);
+      border-radius: var(--radius-full);
+      padding: 4px 10px 4px 8px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .streak-badge__flame {
+      width: 16px; height: 16px;
+      animation: breathe 2.4s ease-in-out infinite;
+    }
+
+    .streak-badge__count {
+      font-size: 13px; font-weight: 700;
+      color: var(--color-streak);
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums; /* fix: was missing in compact badge */
+    }
+
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%       { transform: scale(1.14); opacity: 0.80; }
+    }
+
+    /* Avatar */
+    .avatar {
+      width: 32px; height: 32px;
+      border-radius: var(--radius-full);
+      background: linear-gradient(135deg, #2AABB3 0%, #4F46E5 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff;
+      cursor: pointer; flex-shrink: 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       SCROLL CONTENT
+       ═══════════════════════════════════════════════════════ */
+    .scroll-content {
+      flex: 1;
+      overflow-y: auto;
+      padding-top: var(--navbar-height);
+      padding-bottom: calc(var(--bottom-nav-height) + 16px + env(safe-area-inset-bottom));
+    }
+
+    .content-inner {
+      padding: var(--sp-5) var(--sp-4) 0;
+      display: flex; flex-direction: column; gap: var(--sp-4);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       GREETING
+       ═══════════════════════════════════════════════════════ */
+    .greeting { padding: var(--sp-2) 0 0; }
+
+    .greeting__sub {
+      font-size: 13px; font-weight: 500;
+      color: var(--text-muted); margin-bottom: 2px;
+    }
+
+    .greeting__name {
+      font-size: 24px; font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.6px; line-height: 1.2;
+    }
+
+    .greeting__countdown {
+      display: inline-flex; align-items: center; gap: var(--sp-1);
+      margin-top: var(--sp-2);
+      background: rgba(240, 98, 90, 0.08);
+      border: 1px solid rgba(240, 98, 90, 0.18);
+      border-radius: var(--radius-full);
+      padding: 4px 10px;
+    }
+
+    .greeting__countdown-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--color-error);
+      animation: pulse-dot 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.35; }
+    }
+
+    .greeting__countdown-text {
+      font-size: 12px; font-weight: 600;
+      color: var(--color-error);
+      font-variant-numeric: tabular-nums;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .streak-badge__flame,
+      .greeting__countdown-dot { animation: none; }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       CARDS (BASE TYPES)
+       ═══════════════════════════════════════════════════════ */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-4);
+    }
+
+    .card--elevated { background: var(--bg-elevated); }
+
+    .card--accent {
+      background: var(--bg-surface);
+      border: 1px solid var(--color-accent-border);
+      position: relative; overflow: hidden;
+    }
+
+    .card--accent::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       NEXT STEP CARD
+       ═══════════════════════════════════════════════════════ */
+    .next-step__label {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.9px; text-transform: uppercase;
+      color: var(--color-accent); margin-bottom: var(--sp-3);
+    }
+
+    .next-step__subject-row {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--sp-3); gap: var(--sp-2);
+    }
+
+    .next-step__subject { display: flex; align-items: center; gap: var(--sp-2); }
+
+    .next-step__icon {
+      width: 38px; height: 38px;
+      border-radius: var(--radius-sm);
+      background: var(--color-accent-subtle);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .next-step__subject-name {
+      font-size: 16px; font-weight: 700; color: var(--text-primary);
+    }
+
+    .next-step__subject-topic {
+      font-size: 12px; font-weight: 500;
+      color: var(--text-secondary); margin-top: 1px;
+    }
+
+    .next-step__badge {
+      font-size: 11px; font-weight: 600;
+      color: var(--color-warning);
+      background: rgba(245, 166, 35, 0.10);
+      border: 1px solid rgba(245, 166, 35, 0.20);
+      border-radius: var(--radius-full);
+      padding: 3px 9px; white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* Progress */
+    .progress-row {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 6px;
+    }
+
+    .progress-label {
+      font-size: 12px; font-weight: 500; color: var(--text-secondary);
+    }
+
+    .progress-value {
+      font-size: 12px; font-weight: 700; color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress-track {
+      height: 6px;
+      background: var(--bg-overlay);
+      border-radius: var(--radius-full);
+      overflow: hidden; margin-bottom: var(--sp-4);
+    }
+
+    .progress-fill {
+      height: 100%; border-radius: var(--radius-full);
+      background: linear-gradient(90deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+      transition: width 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* CTA Button */
+    .btn {
+      display: inline-flex; align-items: center;
+      justify-content: center; gap: var(--sp-2);
+      border: none; border-radius: var(--radius-md);
+      font-family: inherit; font-weight: 600;
+      font-size: 14px; cursor: pointer;
+      transition: transform var(--t-fast), background var(--t-fast), box-shadow var(--t-fast);
+      -webkit-tap-highlight-color: transparent;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn--primary {
+      background: var(--color-accent);
+      color: #fff; padding: 13px var(--sp-5); width: 100%;
+      box-shadow: 0 4px 20px rgba(42, 171, 179, 0.28);
+    }
+    .btn--primary:hover {
+      background: var(--color-accent-hover);
+      box-shadow: 0 6px 28px rgba(42, 171, 179, 0.38);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       STATS ROW
+       ═══════════════════════════════════════════════════════ */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-3);
+    }
+
+    .stat-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: var(--sp-3) var(--sp-2);
+      text-align: center;
+    }
+
+    .stat-card__value {
+      font-size: 22px; font-weight: 700; line-height: 1.2;
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-primary);
+    }
+    .stat-card__value--accent  { color: var(--color-accent); }
+    .stat-card__value--success { color: var(--color-success); }
+    .stat-card__value--streak  { color: var(--color-streak); }
+
+    .stat-card__label {
+      font-size: 11px; font-weight: 500;
+      color: var(--text-muted); margin-top: 4px;
+      line-height: 1.3;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       SECTION HEADER
+       ═══════════════════════════════════════════════════════ */
+    .section-header {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: var(--sp-3);
+    }
+
+    .section-title {
+      font-size: 15px; font-weight: 700; color: var(--text-primary);
+    }
+
+    .section-link {
+      font-size: 13px; font-weight: 600;
+      color: var(--color-accent); text-decoration: none;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       RADAR CHART (Pure SVG, no CDN)
+       ═══════════════════════════════════════════════════════ */
+    .radar-container {
+      max-width: 268px; margin: var(--sp-4) auto 0;
+    }
+
+    .radar-legend {
+      display: flex; flex-wrap: wrap;
+      gap: var(--sp-2) var(--sp-4);
+      margin-top: var(--sp-4); justify-content: center;
+    }
+
+    .radar-legend__item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 500; color: var(--text-secondary);
+    }
+
+    .radar-legend__dot {
+      width: 8px; height: 8px;
+      border-radius: 50%; flex-shrink: 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       RECENT ATTEMPTS
+       ═══════════════════════════════════════════════════════ */
+    .attempt-list { display: flex; flex-direction: column; gap: var(--sp-2); }
+
+    .attempt-item {
+      display: flex; align-items: center; gap: var(--sp-3);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: var(--sp-3);
+      cursor: pointer;
+      transition: background var(--t-fast), border-color var(--t-fast);
+      -webkit-tap-highlight-color: transparent;
+      min-height: 64px; /* fix: was fixed height, now min-height */
+    }
+    .attempt-item:active { background: var(--bg-floating); }
+
+    .attempt-item__icon {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .attempt-item__icon--math { background: rgba(42, 171, 179, 0.12); }
+    .attempt-item__icon--rus  { background: rgba(155, 109, 255, 0.12); }
+    .attempt-item__icon--inf  { background: rgba(76, 200, 122, 0.12); }
+
+    .attempt-item__info { flex: 1; min-width: 0; }
+
+    .attempt-item__subject {
+      font-size: 14px; font-weight: 600; color: var(--text-primary);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .attempt-item__meta {
+      font-size: 12px; font-weight: 500;
+      color: var(--text-muted); margin-top: 2px;
+    }
+
+    .attempt-item__right {
+      display: flex; flex-direction: column;
+      align-items: flex-end; gap: 4px; flex-shrink: 0;
+    }
+
+    .badge {
+      font-size: 11px; font-weight: 700;
+      border-radius: var(--radius-full);
+      padding: 3px 9px;
+      font-variant-numeric: tabular-nums;
+    }
+    .badge--success { background: rgba(76,200,122,0.12); color: var(--color-success); }
+    .badge--warning { background: rgba(245,166,35,0.12); color: var(--color-warning); }
+    .badge--error   { background: rgba(240,98,90,0.12);  color: var(--color-error); }
+
+    .attempt-item__score {
+      font-size: 11px; font-weight: 500; color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       BOTTOM NAVIGATION — glassmorphism
+       ═══════════════════════════════════════════════════════ */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 100%; max-width: 480px;
+      height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+      padding-bottom: env(safe-area-inset-bottom);
+      display: flex; align-items: flex-start; padding-top: 8px;
+      background: rgba(15, 16, 21, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border-subtle);
+      z-index: 100;
+    }
+
+    .bottom-nav__list {
+      display: flex; width: 100%; list-style: none;
+    }
+
+    .bottom-nav__item { flex: 1; }
+
+    .bottom-nav__link {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+      padding: 4px 0; text-decoration: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity var(--t-fast);
+    }
+    .bottom-nav__link:active { opacity: 0.65; }
+
+    .bottom-nav__icon {
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .bottom-nav__label { font-size: 10px; font-weight: 600; letter-spacing: 0.2px; }
+
+    .bottom-nav__link--active .bottom-nav__label { color: var(--color-accent); }
+    .bottom-nav__link--inactive .bottom-nav__label { color: var(--text-muted); }
+
+    /* SVG stroke color via CSS filter on SVG group */
+    .bottom-nav__link--active .nav-icon   { stroke: var(--color-accent); }
+    .bottom-nav__link--inactive .nav-icon { stroke: var(--text-muted); }
+
+    /* ═══════════════════════════════════════════════════════
+       RESPONSIVE TWEAKS
+       ═══════════════════════════════════════════════════════ */
+    @media (max-width: 360px) {
+      .greeting__name { font-size: 20px; }
+      .stat-card__value { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ══════════════════════════════════════════════
+       NAVBAR
+       ══════════════════════════════════════════════ -->
+  <nav class="navbar" role="banner" aria-label="Шапка приложения">
+    <a class="navbar__logo" href="#" aria-label="ОГЭ в кармане — главная">
+      <div class="navbar__logo-icon" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+      </div>
+      <span class="navbar__logo-text">ОГЭ <span>в кармане</span></span>
+    </a>
+
+    <div class="navbar__right">
+      <button class="streak-badge" aria-label="Серия: 12 дней подряд">
+        <!-- Flame SVG inline -->
+        <svg class="streak-badge__flame" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 2C9 6.5 7 10 7 13a5 5 0 0 0 10 0c0-2.5-1.5-5-3-8
+                   C13.5 7.5 13 9.5 13 11a1 1 0 0 1-2 0c0-2.5 1-5 1-9z"
+                fill="#FF9A3C" opacity="0.9"/>
+        </svg>
+        <span class="streak-badge__count">12</span>
+      </button>
+
+      <div class="avatar" role="button" aria-label="Профиль — Алина" tabindex="0">АЛ</div>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════
+       SCROLL CONTENT
+       ══════════════════════════════════════════════ -->
+  <main class="scroll-content" role="main">
+    <div class="content-inner">
+
+      <!-- Greeting -->
+      <section class="greeting" aria-label="Приветствие">
+        <p class="greeting__sub">Добрый вечер,</p>
+        <h1 class="greeting__name">Алина 👋</h1>
+        <div class="greeting__countdown" role="status" aria-live="polite">
+          <div class="greeting__countdown-dot" aria-hidden="true"></div>
+          <span class="greeting__countdown-text">ОГЭ через 47 дней</span>
+        </div>
+      </section>
+
+      <!-- Next Step Card -->
+      <section aria-label="Следующий шаг">
+        <div class="card card--accent">
+          <p class="next-step__label">Следующий шаг</p>
+
+          <div class="next-step__subject-row">
+            <div class="next-step__subject">
+              <div class="next-step__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="var(--color-accent)" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 7h16M4 12h10M4 17h7"/>
+                </svg>
+              </div>
+              <div>
+                <div class="next-step__subject-name">Математика</div>
+                <div class="next-step__subject-topic">Уравнения и неравенства</div>
+              </div>
+            </div>
+            <div class="next-step__badge">Слабое место</div>
+          </div>
+
+          <div class="progress-row">
+            <span class="progress-label">Прогресс темы</span>
+            <span class="progress-value">68%</span>
+          </div>
+          <div class="progress-track"
+               role="progressbar" aria-valuenow="68"
+               aria-valuemin="0" aria-valuemax="100"
+               aria-label="Прогресс темы: 68%">
+            <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+          </div>
+
+          <button class="btn btn--primary" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            Продолжить
+          </button>
+        </div>
+      </section>
+
+      <!-- Stats -->
+      <div class="stats-row" role="region" aria-label="Быстрая статистика">
+        <div class="stat-card">
+          <div class="stat-card__value stat-card__value--accent">143</div>
+          <div class="stat-card__label">Заданий решено</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__value stat-card__value--success">74%</div>
+          <div class="stat-card__label">Средний балл</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__value stat-card__value--streak">12</div>
+          <div class="stat-card__label">Дней серия</div>
+        </div>
+      </div>
+
+      <!-- Radar Progress -->
+      <section class="card" aria-label="Прогресс по предметам">
+        <div class="section-header">
+          <h2 class="section-title">Прогресс по предметам</h2>
+        </div>
+
+        <div class="radar-container">
+          <svg id="radar-svg" viewBox="0 0 268 268" width="100%" aria-hidden="true"></svg>
+        </div>
+
+        <div class="radar-legend" aria-hidden="true">
+          <div class="radar-legend__item">
+            <div class="radar-legend__dot" style="background:#2AABB3"></div>
+            <span>Математика 68%</span>
+          </div>
+          <div class="radar-legend__item">
+            <div class="radar-legend__dot" style="background:#9B6DFF"></div>
+            <span>Русский 82%</span>
+          </div>
+          <div class="radar-legend__item">
+            <div class="radar-legend__dot" style="background:#4CC87A"></div>
+            <span>Информатика 45%</span>
+          </div>
+          <div class="radar-legend__item">
+            <div class="radar-legend__dot" style="background:#F5A623"></div>
+            <span>Физика 60%</span>
+          </div>
+          <div class="radar-legend__item">
+            <div class="radar-legend__dot" style="background:#F0625A"></div>
+            <span>Биология 35%</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent Attempts -->
+      <section aria-label="Последние попытки">
+        <div class="section-header">
+          <h2 class="section-title">Последние попытки</h2>
+          <a class="section-link" href="#">Все →</a>
+        </div>
+
+        <div class="attempt-list">
+
+          <div class="attempt-item" role="button" tabindex="0"
+               aria-label="Математика, Алгебра — 8 из 10, хорошо">
+            <div class="attempt-item__icon attempt-item__icon--math" aria-hidden="true">➗</div>
+            <div class="attempt-item__info">
+              <div class="attempt-item__subject">Математика — Алгебра</div>
+              <div class="attempt-item__meta">Вариант №14 · 2 ч назад</div>
+            </div>
+            <div class="attempt-item__right">
+              <span class="badge badge--success">Хорошо</span>
+              <span class="attempt-item__score">8 / 10</span>
+            </div>
+          </div>
+
+          <div class="attempt-item" role="button" tabindex="0"
+               aria-label="Русский язык — 6 из 10, норм">
+            <div class="attempt-item__icon attempt-item__icon--rus" aria-hidden="true">📝</div>
+            <div class="attempt-item__info">
+              <div class="attempt-item__subject">Русский язык — Тест</div>
+              <div class="attempt-item__meta">Вчера в 18:30</div>
+            </div>
+            <div class="attempt-item__right">
+              <span class="badge badge--warning">Норм</span>
+              <span class="attempt-item__score">6 / 10</span>
+            </div>
+          </div>
+
+          <div class="attempt-item" role="button" tabindex="0"
+               aria-label="Информатика, Алгоритмы — 3 из 10, сложно">
+            <div class="attempt-item__icon attempt-item__icon--inf" aria-hidden="true">💻</div>
+            <div class="attempt-item__info">
+              <div class="attempt-item__subject">Информатика — Алгоритмы</div>
+              <div class="attempt-item__meta">2 дня назад</div>
+            </div>
+            <div class="attempt-item__right">
+              <span class="badge badge--error">Сложно</span>
+              <span class="attempt-item__score">3 / 10</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div><!-- /.content-inner -->
+  </main>
+
+  <!-- ══════════════════════════════════════════════
+       BOTTOM NAVIGATION
+       ══════════════════════════════════════════════ -->
+  <nav class="bottom-nav" aria-label="Основная навигация">
+    <ul class="bottom-nav__list" role="list">
+
+      <li class="bottom-nav__item">
+        <a class="bottom-nav__link bottom-nav__link--active" href="#" aria-current="page">
+          <div class="bottom-nav__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                 class="nav-icon" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </div>
+          <span class="bottom-nav__label">Главная</span>
+        </a>
+      </li>
+
+      <li class="bottom-nav__item">
+        <a class="bottom-nav__link bottom-nav__link--inactive" href="#">
+          <div class="bottom-nav__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                 class="nav-icon" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 20h9"/>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+          </div>
+          <span class="bottom-nav__label">Практика</span>
+        </a>
+      </li>
+
+      <li class="bottom-nav__item">
+        <a class="bottom-nav__link bottom-nav__link--inactive" href="#">
+          <div class="bottom-nav__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                 class="nav-icon" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+          </div>
+          <span class="bottom-nav__label">Теория</span>
+        </a>
+      </li>
+
+      <li class="bottom-nav__item">
+        <a class="bottom-nav__link bottom-nav__link--inactive" href="#">
+          <div class="bottom-nav__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                 class="nav-icon" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6"  y1="20" x2="6"  y2="14"/>
+            </svg>
+          </div>
+          <span class="bottom-nav__label">Прогресс</span>
+        </a>
+      </li>
+
+      <li class="bottom-nav__item">
+        <a class="bottom-nav__link bottom-nav__link--inactive" href="#">
+          <div class="bottom-nav__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                 class="nav-icon" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <span class="bottom-nav__label">Профиль</span>
+        </a>
+      </li>
+
+    </ul>
+  </nav>
+
+</div><!-- /.app-shell -->
+
+<script>
+  /* ═══════════════════════════════════════════════
+     ANIMATE PROGRESS BAR ON LOAD
+     ═══════════════════════════════════════════════ */
+  window.addEventListener('DOMContentLoaded', () => {
+    const fill = document.getElementById('progress-fill');
+    if (fill) {
+      requestAnimationFrame(() => setTimeout(() => { fill.style.width = '68%'; }, 80));
+    }
+
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    drawRadar(prefersReduced);
+  });
+
+  /* ═══════════════════════════════════════════════
+     PURE SVG RADAR CHART
+     No external dependencies — draws directly via DOM
+     ═══════════════════════════════════════════════ */
+  function drawRadar(skipAnimation) {
+    const svg = document.getElementById('radar-svg');
+    if (!svg) return;
+
+    const cx = 134, cy = 134, maxR = 100;
+    const subjects = [
+      { label: 'Математика',  pct: 68, color: '#2AABB3' },
+      { label: 'Русский',     pct: 82, color: '#9B6DFF' },
+      { label: 'Информатика', pct: 45, color: '#4CC87A' },
+      { label: 'Физика',      pct: 60, color: '#F5A623' },
+      { label: 'Биология',    pct: 35, color: '#F0625A' },
+    ];
+    const n = subjects.length;
+
+    const angle = (i) => (Math.PI * 2 / n) * i - Math.PI / 2;
+
+    const pt = (i, r) => ({
+      x: cx + r * Math.cos(angle(i)),
+      y: cy + r * Math.sin(angle(i)),
+    });
+
+    const poly = (r) =>
+      subjects.map((_, i) => pt(i, r))
+               .map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
+               .join(' ') + ' Z';
+
+    let html = '';
+
+    /* Grid rings */
+    [0.25, 0.5, 0.75, 1].forEach(lvl => {
+      html += `<path d="${poly(maxR * lvl)}"
+        fill="${lvl === 1 ? 'rgba(255,255,255,0.02)' : 'none'}"
+        stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+    });
+
+    /* Axis spokes */
+    subjects.forEach((_, i) => {
+      const p = pt(i, maxR);
+      html += `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(2)}" y2="${p.y.toFixed(2)}"
+        stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+    });
+
+    /* Data polygon */
+    const dataPts = subjects.map((s, i) => pt(i, maxR * s.pct / 100));
+    const dataPath = dataPts.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ') + ' Z';
+    html += `<path d="${dataPath}"
+      fill="rgba(42,171,179,0.13)" stroke="#2AABB3"
+      stroke-width="1.5" stroke-linejoin="round"/>`;
+
+    /* Dots */
+    dataPts.forEach((p, i) => {
+      html += `<circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}"
+        r="4" fill="${subjects[i].color}"
+        stroke="#0F1015" stroke-width="2"/>`;
+    });
+
+    /* Labels */
+    subjects.forEach((s, i) => {
+      const lp = pt(i, maxR + 24);
+      html += `
+        <text x="${lp.x.toFixed(2)}" y="${(lp.y - 5).toFixed(2)}"
+          text-anchor="middle" dominant-baseline="auto"
+          font-size="10" font-family="Inter, sans-serif"
+          font-weight="600" fill="#A8A7AF">${s.label}</text>
+        <text x="${lp.x.toFixed(2)}" y="${(lp.y + 9).toFixed(2)}"
+          text-anchor="middle" dominant-baseline="auto"
+          font-size="10" font-family="'JetBrains Mono', monospace"
+          font-weight="700" fill="${s.color}">${s.pct}%</text>
+      `;
+    });
+
+    svg.innerHTML = html;
+  }
+
+  /* ═══════════════════════════════════════════════
+     KEYBOARD NAV for attempt items
+     ═══════════════════════════════════════════════ */
+  document.querySelectorAll('.attempt-item[role="button"]').forEach(el => {
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); }
+    });
+  });
+</script>
+</body>
+</html>

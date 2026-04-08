@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Диагностика — ОГЭ в кармане</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════════════════
+       DESIGN TOKENS
+       ═══════════════════════════════════════════════════════ */
+    :root {
+      --bg-base:     #0F1015;
+      --bg-surface:  #17181E;
+      --bg-elevated: #1E2028;
+      --bg-floating: #252830;
+      --bg-overlay:  #2D3038;
+
+      --color-accent:        #2AABB3;
+      --color-accent-hover:  #3DC3CC;
+      --color-accent-subtle: rgba(42,171,179,0.12);
+      --color-accent-border: rgba(42,171,179,0.30);
+
+      --color-success:        #4CC87A;
+      --color-success-subtle: rgba(76,200,122,0.10);
+      --color-success-border: rgba(76,200,122,0.30);
+
+      --color-error:        #F0625A;
+      --color-error-subtle: rgba(240,98,90,0.10);
+      --color-error-border: rgba(240,98,90,0.30);
+
+      --color-pro: #9B6DFF;
+
+      --text-primary:   #EEEDF0;
+      --text-secondary: #A8A7AF;
+      --text-muted:     #6B6A73;
+      --text-disabled:  #3D3C45;
+
+      --border-subtle:  rgba(255,255,255,0.06);
+      --border-default: rgba(255,255,255,0.10);
+      --border-strong:  rgba(255,255,255,0.16);
+
+      --sp-1:4px; --sp-2:8px; --sp-3:12px;
+      --sp-4:16px; --sp-5:20px; --sp-6:24px;
+
+      --radius-sm:   8px;
+      --radius-md:   12px;
+      --radius-lg:   16px;
+      --radius-xl:   20px;
+      --radius-full: 9999px;
+
+      --t-fast: 150ms ease;
+      --t-base: 220ms ease;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       RESET & BASE
+       ═══════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior: none;
+    }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    input  { font-family: inherit; }
+
+    /* ═══════════════════════════════════════════════════════
+       STEP SYSTEM
+       ═══════════════════════════════════════════════════════ */
+    .step {
+      display: none;
+      min-height: 100dvh;
+      flex-direction: column;
+      animation: stepIn 240ms ease both;
+    }
+    .step.active { display: flex; }
+
+    @keyframes stepIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       SHARED HEADER
+       ═══════════════════════════════════════════════════════ */
+    .s-header {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px var(--sp-5);
+      background: rgba(15,16,21,0.80);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .s-header__logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--color-accent);
+    }
+
+    .s-header__step {
+      font-size: 13px; font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .s-header__back {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 14px; font-weight: 500;
+      color: var(--text-secondary);
+      padding: 6px 2px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .s-header__back:hover { color: var(--text-primary); }
+
+    /* ═══════════════════════════════════════════════════════
+       SHARED LAYOUT
+       ═══════════════════════════════════════════════════════ */
+    .s-body {
+      flex: 1; display: flex; flex-direction: column;
+      max-width: 480px; width: 100%;
+      margin: 0 auto;
+      padding: var(--sp-6) var(--sp-5) 40px;
+    }
+
+    .s-title {
+      font-size: 26px; font-weight: 800;
+      letter-spacing: -0.6px; line-height: 1.2;
+      margin-bottom: var(--sp-2);
+    }
+    .s-title span { color: var(--color-accent); }
+
+    .s-sub {
+      font-size: 15px; font-weight: 400;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      margin-bottom: var(--sp-6);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       STEP 1: EXAM SELECTION CARDS
+       ═══════════════════════════════════════════════════════ */
+    .choice-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: var(--sp-3); margin-bottom: var(--sp-4);
+    }
+
+    .choice-card {
+      position: relative;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center;
+      padding: 28px var(--sp-4);
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: border-color var(--t-fast), background var(--t-fast), transform var(--t-fast);
+      -webkit-tap-highlight-color: transparent;
+      text-align: center;
+      gap: var(--sp-3);
+    }
+    .choice-card:hover {
+      background: var(--bg-elevated);
+      border-color: var(--border-strong);
+    }
+    .choice-card:active { transform: scale(0.97); }
+    .choice-card.selected {
+      background: var(--color-accent-subtle);
+      border-color: var(--color-accent);
+    }
+
+    .choice-card__icon {
+      width: 52px; height: 52px;
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      transition: background var(--t-fast);
+    }
+    .choice-card.selected .choice-card__icon {
+      background: var(--color-accent-subtle);
+    }
+
+    .choice-card__label {
+      font-size: 20px; font-weight: 800;
+      letter-spacing: -0.4px;
+      color: var(--text-primary);
+    }
+
+    .choice-card__desc {
+      font-size: 12px; font-weight: 500;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .choice-card__check {
+      position: absolute; top: 10px; right: 10px;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transform: scale(0.6);
+      transition: opacity var(--t-fast), transform var(--t-fast);
+    }
+    .choice-card.selected .choice-card__check {
+      opacity: 1; transform: scale(1);
+    }
+
+    /* Subject cards — vertical layout */
+    .subject-grid {
+      display: flex; flex-direction: column;
+      gap: var(--sp-3); margin-bottom: var(--sp-4);
+    }
+
+    .subject-card {
+      display: flex; align-items: center;
+      gap: var(--sp-4);
+      padding: 18px var(--sp-5);
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: border-color var(--t-fast), background var(--t-fast), transform var(--t-fast);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .subject-card:hover { background: var(--bg-elevated); border-color: var(--border-strong); }
+    .subject-card:active { transform: scale(0.98); }
+    .subject-card.selected {
+      background: var(--color-accent-subtle);
+      border-color: var(--color-accent);
+    }
+
+    .subject-card__icon {
+      width: 44px; height: 44px; flex-shrink: 0;
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      transition: background var(--t-fast);
+    }
+    .subject-card.selected .subject-card__icon { background: var(--color-accent-subtle); }
+
+    .subject-card__info { flex: 1; }
+
+    .subject-card__name {
+      font-size: 17px; font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+
+    .subject-card__hint {
+      font-size: 13px; font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .subject-card__arrow {
+      color: var(--text-muted);
+      transition: color var(--t-fast);
+    }
+    .subject-card:hover .subject-card__arrow { color: var(--text-primary); }
+
+    /* ═══════════════════════════════════════════════════════
+       STEP 3: DIAGNOSTIC QUESTIONS
+       ═══════════════════════════════════════════════════════ */
+    .diag-header {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(15,16,21,0.80);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+      padding: 14px var(--sp-5) 0;
+    }
+
+    .diag-header__top {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .diag-header__logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--color-accent);
+    }
+
+    .diag-header__counter {
+      font-size: 13px; font-weight: 600;
+      color: var(--text-secondary);
+      font-variant-numeric: tabular-nums;
+    }
+    .diag-header__counter span { color: var(--text-muted); font-weight: 400; }
+
+    .diag-progress {
+      height: 3px;
+      background: var(--border-subtle);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .diag-progress__fill {
+      height: 100%;
+      background: var(--color-accent);
+      border-radius: 99px;
+      transition: width 300ms ease;
+    }
+
+    .diag-body {
+      flex: 1; display: flex; flex-direction: column;
+      max-width: 480px; width: 100%; margin: 0 auto;
+      padding: var(--sp-6) var(--sp-5) 32px;
+    }
+
+    .topic-chip {
+      display: inline-flex; align-items: center;
+      padding: 4px 10px;
+      background: var(--color-accent-subtle);
+      border: 1px solid var(--color-accent-border);
+      border-radius: var(--radius-full);
+      font-size: 12px; font-weight: 600;
+      color: var(--color-accent);
+      margin-bottom: var(--sp-4);
+      letter-spacing: 0.02em;
+    }
+
+    .question-text {
+      font-size: 18px; font-weight: 600;
+      line-height: 1.5; letter-spacing: -0.2px;
+      color: var(--text-primary);
+      margin-bottom: var(--sp-5);
+    }
+
+    /* ─── Answer options ─── */
+    .options-list {
+      display: flex; flex-direction: column;
+      gap: var(--sp-2); margin-bottom: auto;
+    }
+
+    .answer-option {
+      display: flex; align-items: center;
+      gap: var(--sp-3);
+      padding: 15px var(--sp-4);
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-default);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background var(--t-fast), border-color var(--t-fast), transform 100ms ease;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .answer-option:hover:not(.locked) {
+      background: var(--bg-elevated);
+      border-color: var(--border-strong);
+    }
+    .answer-option:active:not(.locked) { transform: scale(0.99); }
+
+    .answer-option.selected {
+      background: var(--color-accent-subtle);
+      border-color: var(--color-accent);
+    }
+    .answer-option.correct {
+      background: var(--color-success-subtle);
+      border-color: var(--color-success-border);
+    }
+    .answer-option.incorrect {
+      background: var(--color-error-subtle);
+      border-color: var(--color-error-border);
+    }
+    .answer-option.revealed {
+      background: rgba(76,200,122,0.06);
+      border-color: rgba(76,200,122,0.20);
+    }
+    .answer-option.locked { cursor: default; }
+
+    .answer-letter {
+      width: 32px; height: 32px; flex-shrink: 0;
+      border-radius: var(--radius-sm);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      color: var(--text-secondary);
+      transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+    }
+    .answer-option.selected .answer-letter {
+      background: var(--color-accent); border-color: var(--color-accent); color: #fff;
+    }
+    .answer-option.correct .answer-letter {
+      background: var(--color-success); border-color: var(--color-success); color: #fff;
+    }
+    .answer-option.incorrect .answer-letter {
+      background: var(--color-error); border-color: var(--color-error); color: #fff;
+    }
+    .answer-option.revealed .answer-letter {
+      background: rgba(76,200,122,0.18); border-color: var(--color-success); color: var(--color-success);
+    }
+
+    .answer-text {
+      font-size: 15px; font-weight: 500;
+      color: var(--text-primary); line-height: 1.45;
+      flex: 1;
+    }
+    .answer-option.incorrect .answer-text { color: var(--text-secondary); }
+
+    /* Next button area */
+    .diag-footer {
+      padding: var(--sp-4) var(--sp-5) calc(var(--sp-6) + env(safe-area-inset-bottom));
+      max-width: 480px; width: 100%; margin: 0 auto;
+      flex-shrink: 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       BUTTONS
+       ═══════════════════════════════════════════════════════ */
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 16px var(--sp-5);
+      border-radius: var(--radius-md);
+      font-size: 16px; font-weight: 700;
+      letter-spacing: -0.2px;
+      transition: background var(--t-fast), opacity var(--t-fast), transform 100ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active { transform: scale(0.98); }
+
+    .btn--primary {
+      background: var(--color-accent);
+      color: #fff;
+    }
+    .btn--primary:hover { background: var(--color-accent-hover); }
+    .btn--primary:disabled {
+      background: var(--bg-elevated);
+      color: var(--text-disabled);
+      cursor: not-allowed; transform: none;
+    }
+
+    .btn--ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1.5px solid var(--border-default);
+    }
+    .btn--ghost:hover { background: var(--bg-surface); border-color: var(--border-strong); }
+
+    .btn--success {
+      background: var(--color-success);
+      color: #fff;
+    }
+    .btn--success:hover { background: #5DD68A; }
+
+    /* ═══════════════════════════════════════════════════════
+       STEP 4: RESULTS — WOW MOMENT
+       ═══════════════════════════════════════════════════════ */
+    .results-header {
+      position: sticky; top: 0; z-index: 10;
+      padding: 16px var(--sp-5);
+      background: rgba(15,16,21,0.80);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .results-scroll {
+      flex: 1; overflow-y: auto;
+      padding-bottom: 40px;
+    }
+
+    .results-body {
+      max-width: 480px; width: 100%; margin: 0 auto;
+      padding: var(--sp-6) var(--sp-5);
+      display: flex; flex-direction: column; gap: var(--sp-4);
+    }
+
+    /* Score hero */
+    .score-hero {
+      text-align: center;
+      padding: 32px var(--sp-5) 28px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-xl);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .score-hero::before {
+      content: '';
+      position: absolute; top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 200px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+    }
+
+    .score-hero__label {
+      font-size: 13px; font-weight: 600;
+      color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;
+      margin-bottom: var(--sp-3);
+    }
+
+    .score-hero__number {
+      font-size: 72px; font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: -2px; line-height: 1;
+      color: var(--color-accent);
+      margin-bottom: var(--sp-2);
+      opacity: 0;
+      animation: scoreReveal 600ms 300ms ease both;
+    }
+
+    @keyframes scoreReveal {
+      from { opacity: 0; transform: scale(0.8); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .score-hero__max {
+      font-size: 15px; font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: var(--sp-4);
+    }
+
+    .score-hero__grade {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 16px;
+      border-radius: var(--radius-full);
+      font-size: 14px; font-weight: 700;
+    }
+
+    .score-hero__grade--3 {
+      background: rgba(245,166,35,0.12);
+      border: 1px solid rgba(245,166,35,0.28);
+      color: #F5A623;
+    }
+    .score-hero__grade--4 {
+      background: rgba(42,171,179,0.12);
+      border: 1px solid rgba(42,171,179,0.28);
+      color: var(--color-accent);
+    }
+    .score-hero__grade--5 {
+      background: rgba(76,200,122,0.12);
+      border: 1px solid rgba(76,200,122,0.28);
+      color: var(--color-success);
+    }
+
+    /* Stats row */
+    .stats-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: var(--sp-3);
+    }
+
+    .stat-card {
+      padding: var(--sp-4) var(--sp-4);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+    }
+
+    .stat-card__value {
+      font-size: 28px; font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: -0.5px; line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-card__value--green { color: var(--color-success); }
+    .stat-card__value--red   { color: var(--color-error); }
+
+    .stat-card__label {
+      font-size: 12px; font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    /* Topics section */
+    .section-label {
+      font-size: 13px; font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      margin-bottom: var(--sp-3);
+    }
+
+    .topic-row {
+      display: flex; align-items: center;
+      gap: var(--sp-3);
+      padding: 12px var(--sp-4);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--sp-2);
+    }
+
+    .topic-row__icon {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .topic-row__icon--weak   { background: var(--color-error); }
+    .topic-row__icon--strong { background: var(--color-success); }
+
+    .topic-row__name {
+      flex: 1; font-size: 14px; font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .topic-row__score {
+      font-size: 13px; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .topic-row__score--weak   { color: var(--color-error); }
+    .topic-row__score--strong { color: var(--color-success); }
+
+    /* CTA block */
+    .cta-block {
+      padding: var(--sp-6) var(--sp-5);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-xl);
+      text-align: center;
+    }
+
+    .cta-block__title {
+      font-size: 20px; font-weight: 800;
+      letter-spacing: -0.4px; line-height: 1.3;
+      margin-bottom: var(--sp-2);
+    }
+
+    .cta-block__sub {
+      font-size: 14px; font-weight: 400;
+      color: var(--text-secondary); line-height: 1.55;
+      margin-bottom: var(--sp-5);
+    }
+
+    .cta-block__footnote {
+      font-size: 12px; font-weight: 400;
+      color: var(--text-muted); margin-top: var(--sp-3);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       STEP 5: REGISTRATION
+       ═══════════════════════════════════════════════════════ */
+    .reg-body {
+      flex: 1; display: flex; flex-direction: column;
+      max-width: 480px; width: 100%; margin: 0 auto;
+      padding: var(--sp-6) var(--sp-5) 40px;
+    }
+
+    .reg-preview {
+      padding: var(--sp-4) var(--sp-4);
+      background: var(--color-accent-subtle);
+      border: 1px solid var(--color-accent-border);
+      border-radius: var(--radius-lg);
+      display: flex; align-items: center; gap: var(--sp-3);
+      margin-bottom: var(--sp-6);
+    }
+
+    .reg-preview__icon {
+      width: 40px; height: 40px; flex-shrink: 0;
+      border-radius: var(--radius-md);
+      background: rgba(42,171,179,0.18);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+
+    .reg-preview__text {
+      font-size: 14px; font-weight: 500;
+      color: var(--text-secondary); line-height: 1.45;
+    }
+    .reg-preview__text strong { color: var(--color-accent); font-weight: 700; }
+
+    /* Form */
+    .field { margin-bottom: var(--sp-4); }
+
+    .field__label {
+      display: block;
+      font-size: 13px; font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: var(--sp-2);
+    }
+
+    .field__input {
+      width: 100%; padding: 14px var(--sp-4);
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-default);
+      border-radius: var(--radius-md);
+      font-size: 16px; font-weight: 500;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color var(--t-fast);
+    }
+    .field__input::placeholder { color: var(--text-muted); }
+    .field__input:focus { border-color: var(--color-accent); }
+
+    .or-divider {
+      display: flex; align-items: center; gap: var(--sp-3);
+      margin: var(--sp-4) 0;
+    }
+    .or-divider::before, .or-divider::after {
+      content: ''; flex: 1;
+      height: 1px; background: var(--border-subtle);
+    }
+    .or-divider__text {
+      font-size: 13px; font-weight: 500; color: var(--text-muted);
+    }
+
+    .btn--google {
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-default);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+    .btn--google:hover { background: var(--bg-elevated); border-color: var(--border-strong); }
+
+    .reg-login {
+      text-align: center; margin-top: var(--sp-5);
+      font-size: 14px; font-weight: 500; color: var(--text-muted);
+    }
+    .reg-login a { color: var(--color-accent); text-decoration: none; }
+    .reg-login a:hover { text-decoration: underline; }
+
+    /* ═══════════════════════════════════════════════════════
+       EXIT MODAL
+       ═══════════════════════════════════════════════════════ */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: flex-end;
+      padding: var(--sp-4);
+      animation: backdropIn 200ms ease both;
+    }
+    .modal-backdrop.hidden { display: none; }
+
+    @keyframes backdropIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .modal {
+      width: 100%; max-width: 480px; margin: 0 auto;
+      background: var(--bg-floating);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-xl);
+      padding: var(--sp-6);
+      animation: modalIn 220ms ease both;
+    }
+
+    @keyframes modalIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal__title {
+      font-size: 18px; font-weight: 700;
+      margin-bottom: var(--sp-2);
+    }
+    .modal__sub {
+      font-size: 14px; color: var(--text-secondary);
+      line-height: 1.5; margin-bottom: var(--sp-5);
+    }
+    .modal__actions { display: flex; flex-direction: column; gap: var(--sp-2); }
+
+    /* ═══════════════════════════════════════════════════════
+       ACCESSIBILITY
+       ═══════════════════════════════════════════════════════ */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════
+       STEP 1 — Выбор экзамена
+       ══════════════════════════════════════════════════════ -->
+  <section class="step active" id="step-exam">
+    <header class="s-header">
+      <span class="s-header__logo">ОГЭ в кармане</span>
+      <span class="s-header__step">Шаг 1 из 3</span>
+    </header>
+    <div class="s-body">
+      <h1 class="s-title">Какой экзамен<br>сдаёшь?</h1>
+      <p class="s-sub">Выбери — подберём нужные задания</p>
+      <div class="choice-grid">
+        <button class="choice-card" data-exam="oge" onclick="selectExam('oge')">
+          <div class="choice-card__check">
+            <svg width="12" height="12" fill="none" viewBox="0 0 12 12">
+              <path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="choice-card__icon">📘</div>
+          <div class="choice-card__label">ОГЭ</div>
+          <div class="choice-card__desc">9 класс</div>
+        </button>
+        <button class="choice-card" data-exam="ege" onclick="selectExam('ege')">
+          <div class="choice-card__check">
+            <svg width="12" height="12" fill="none" viewBox="0 0 12 12">
+              <path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="choice-card__icon">📗</div>
+          <div class="choice-card__label">ЕГЭ</div>
+          <div class="choice-card__desc">11 класс</div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════
+       STEP 2 — Выбор предмета
+       ══════════════════════════════════════════════════════ -->
+  <section class="step" id="step-subject">
+    <header class="s-header">
+      <button class="s-header__back" onclick="goTo('step-exam')">
+        <svg width="18" height="18" fill="none" viewBox="0 0 18 18">
+          <path d="M11 14l-5-5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Назад
+      </button>
+      <span class="s-header__step">Шаг 2 из 3</span>
+    </header>
+    <div class="s-body">
+      <h1 class="s-title">Какой предмет<br>готовишь?</h1>
+      <p class="s-sub">Диагностика займёт около 5 минут</p>
+      <div class="subject-grid">
+        <button class="subject-card" data-subject="math" onclick="selectSubject('math')">
+          <div class="subject-card__icon">📐</div>
+          <div class="subject-card__info">
+            <div class="subject-card__name">Математика</div>
+            <div class="subject-card__hint">10 заданий · алгебра и геометрия</div>
+          </div>
+          <div class="subject-card__arrow">
+            <svg width="16" height="16" fill="none" viewBox="0 0 16 16">
+              <path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </button>
+        <button class="subject-card" data-subject="russian" onclick="selectSubject('russian')">
+          <div class="subject-card__icon">📖</div>
+          <div class="subject-card__info">
+            <div class="subject-card__name">Русский язык</div>
+            <div class="subject-card__hint">10 заданий · орфография и пунктуация</div>
+          </div>
+          <div class="subject-card__arrow">
+            <svg width="16" height="16" fill="none" viewBox="0 0 16 16">
+              <path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════
+       STEP 3 — Диагностика (вопросы)
+       ══════════════════════════════════════════════════════ -->
+  <section class="step" id="step-diagnostic">
+    <div class="diag-header">
+      <div class="diag-header__top">
+        <span class="diag-header__logo">ОГЭ в кармане</span>
+        <span class="diag-header__counter">
+          <span id="q-current">1</span><span> / 10</span>
+        </span>
+      </div>
+      <div class="diag-progress">
+        <div class="diag-progress__fill" id="diag-bar" style="width:10%"></div>
+      </div>
+    </div>
+
+    <div class="diag-body">
+      <div class="topic-chip" id="q-topic">Алгебра</div>
+      <div class="question-text" id="q-text">Текст вопроса</div>
+      <div class="options-list" id="options-list"></div>
+    </div>
+
+    <div class="diag-footer">
+      <button class="btn btn--primary" id="btn-next" disabled onclick="nextQuestion()">
+        Следующий вопрос
+      </button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════
+       STEP 4 — Результаты / WOW-момент
+       ══════════════════════════════════════════════════════ -->
+  <section class="step" id="step-results">
+    <header class="results-header">
+      <span class="s-header__logo">ОГЭ в кармане</span>
+      <span style="font-size:13px;font-weight:600;color:var(--color-success)">✓ Диагностика завершена</span>
+    </header>
+    <div class="results-scroll">
+      <div class="results-body">
+        <!-- Score hero -->
+        <div class="score-hero">
+          <div class="score-hero__label">Прогнозируемый балл</div>
+          <div class="score-hero__number" id="res-score">—</div>
+          <div class="score-hero__max" id="res-max">из 32</div>
+          <div class="score-hero__grade" id="res-grade"></div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-card__value stat-card__value--green" id="res-correct">0</div>
+            <div class="stat-card__label">правильных из 10</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__value stat-card__value--red" id="res-wrong">0</div>
+            <div class="stat-card__label">ошибок</div>
+          </div>
+        </div>
+
+        <!-- Weak topics -->
+        <div id="weak-section" style="display:none">
+          <div class="section-label">Слабые темы</div>
+          <div id="weak-list"></div>
+        </div>
+
+        <!-- Strong topics -->
+        <div id="strong-section" style="display:none">
+          <div class="section-label">Уже хорошо</div>
+          <div id="strong-list"></div>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-block">
+          <div class="cta-block__title">Хочешь план подготовки<br>под свои слабые места?</div>
+          <div class="cta-block__sub">Сохраним результат и составим персональный маршрут — какие темы учить и в каком порядке.</div>
+          <button class="btn btn--success" onclick="goTo('step-register')">
+            Сохранить результат бесплатно
+          </button>
+          <div class="cta-block__footnote">Регистрация за 30 секунд. Карта не нужна.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════
+       STEP 5 — Регистрация
+       ══════════════════════════════════════════════════════ -->
+  <section class="step" id="step-register">
+    <header class="s-header">
+      <button class="s-header__back" onclick="goTo('step-results')">
+        <svg width="18" height="18" fill="none" viewBox="0 0 18 18">
+          <path d="M11 14l-5-5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Назад
+      </button>
+      <span class="s-header__logo">ОГЭ в кармане</span>
+    </header>
+    <div class="reg-body">
+      <h1 class="s-title">Сохраняем<br><span>твой результат</span></h1>
+
+      <div class="reg-preview">
+        <div class="reg-preview__icon">📊</div>
+        <div class="reg-preview__text">
+          Прогноз <strong id="reg-score-preview">—</strong> и слабые темы будут в твоём личном кабинете
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="reg-email">Email</label>
+        <input class="field__input" type="email" id="reg-email" placeholder="ваш@email.ru" autocomplete="email">
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="reg-password">Пароль</label>
+        <input class="field__input" type="password" id="reg-password" placeholder="Минимум 8 символов" autocomplete="new-password">
+      </div>
+
+      <button class="btn btn--primary" onclick="handleRegister()">
+        Создать аккаунт
+      </button>
+
+      <div class="or-divider">
+        <span class="or-divider__text">или</span>
+      </div>
+
+      <button class="btn btn--google" onclick="handleGoogleAuth()">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M18.17 10.2c0-.63-.06-1.25-.16-1.84H10v3.48h4.58a3.91 3.91 0 01-1.7 2.57v2.13h2.75c1.61-1.48 2.54-3.67 2.54-6.34z" fill="#4285F4"/>
+          <path d="M10 18.5c2.3 0 4.23-.76 5.64-2.06l-2.75-2.13c-.76.51-1.74.81-2.89.81-2.22 0-4.1-1.5-4.77-3.51H2.38v2.2A8.5 8.5 0 0010 18.5z" fill="#34A853"/>
+          <path d="M5.23 11.61A5.1 5.1 0 015 10c0-.56.1-1.1.23-1.61V6.19H2.38A8.5 8.5 0 001.5 10c0 1.37.33 2.67.88 3.81l2.85-2.2z" fill="#FBBC05"/>
+          <path d="M10 4.88c1.25 0 2.38.43 3.26 1.27l2.44-2.44C14.22 2.34 12.3 1.5 10 1.5A8.5 8.5 0 002.38 6.19l2.85 2.2C5.9 6.38 7.78 4.88 10 4.88z" fill="#EA4335"/>
+        </svg>
+        Войти через Google
+      </button>
+
+      <p class="reg-login">
+        Уже есть аккаунт? <a href="#">Войти</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════
+       EXIT MODAL
+       ══════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop hidden" id="exit-modal">
+    <div class="modal">
+      <div class="modal__title">Выйти из диагностики?</div>
+      <div class="modal__sub">Прогресс не сохранится. Придётся начать сначала.</div>
+      <div class="modal__actions">
+        <button class="btn btn--ghost" onclick="closeExitModal()">Продолжить диагностику</button>
+        <button class="btn" style="color:var(--color-error);background:var(--color-error-subtle);border:1.5px solid var(--color-error-border)" onclick="confirmExit()">
+          Выйти
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════
+       QUESTION BANK
+       ═══════════════════════════════════════════════════════ */
+    const QUESTIONS = {
+      'oge-math': [
+        { topic:'Числа', text:'Найдите значение выражения: 2³ + 3²', options:['13','17','25','31'], correct:1 },
+        { topic:'Алгебра', text:'Упростите: (a + b)² − 2ab', options:['a²','b²','a² + b²','a² − b²'], correct:2 },
+        { topic:'Уравнения', text:'Решите уравнение: 3x − 7 = 2x + 5', options:['x = 2','x = 12','x = −12','x = −2'], correct:1 },
+        { topic:'Геометрия', text:'Площадь прямоугольника со сторонами 5 и 8 см равна:', options:['13 см²','26 см²','40 см²','64 см²'], correct:2 },
+        { topic:'Проценты', text:'Цена товара снизилась на 20% и стала 800 ₽. Какой была исходная цена?', options:['960 ₽','1 000 ₽','1 060 ₽','1 200 ₽'], correct:1 },
+        { topic:'Функции', text:'При каком значении x функция y = 2x − 4 обращается в ноль?', options:['x = −2','x = 2','x = 4','x = −4'], correct:1 },
+        { topic:'Степени', text:'Вычислите: (−3)³', options:['9','−9','27','−27'], correct:3 },
+        { topic:'Геометрия', text:'Катеты прямоугольного треугольника равны 3 и 4. Найдите гипотенузу.', options:['5','7','√7','12'], correct:0 },
+        { topic:'Уравнения', text:'Сколько решений имеет уравнение x² = −4?', options:['Нет решений','1 решение','2 решения','Бесконечно много'], correct:0 },
+        { topic:'Статистика', text:'Среднее арифметическое чисел 4, 7, 9, 12, 8 равно:', options:['7','8','9','7,5'], correct:1 },
+      ],
+      'oge-russian': [
+        { topic:'Орфография', text:'В каком слове пишется НН?', options:['деревяный','оловяный','стеклянный','кожаный'], correct:2 },
+        { topic:'Пунктуация', text:'Какой знак ставится между двумя существительными в именительном падеже, если подлежащее и сказуемое — однородные члены?', options:['Запятая','Тире','Двоеточие','Никакой'], correct:1 },
+        { topic:'Лексика', text:'Какое слово является синонимом слова «огромный»?', options:['крохотный','колоссальный','обычный','мелкий'], correct:1 },
+        { topic:'Морфология', text:'Укажите слово, которое является причастием:', options:['красиво','красный','покрасневший','краснеть'], correct:2 },
+        { topic:'Орфография', text:'В каком слове пишется буква И: пр..зидент, зав..сеть, расст..лить, зам..рать?', options:['зависеть','расстилить','президент','замирать'], correct:2 },
+        { topic:'Синтаксис', text:'Укажите предложение с однородными членами:', options:['Дождь шёл всю ночь.','Мы купили хлеб, молоко и масло.','Он читал, когда я вошёл.','Солнце светило ярко.'], correct:1 },
+        { topic:'Пунктуация', text:'В каком предложении перед союзом И нужна запятая?', options:['Он пел и танцевал.','Ветер стих, и стало тихо.','Она смеялась и шутила.','Мы пели и играли.'], correct:1 },
+        { topic:'Лексика', text:'Какое слово означает «говорящий правду»?', options:['льстивый','правдивый','молчаливый','лукавый'], correct:1 },
+        { topic:'Морфология', text:'Какое слово относится к 1 склонению?', options:['стол','поле','дедушка','рожь'], correct:2 },
+        { topic:'Орфография', text:'В каком случае НЕ пишется слитно?', options:['не забываемый вкус','негодовал','не смотря на дождь','не высокий, но крепкий'], correct:1 },
+      ],
+      'ege-math': [
+        { topic:'Производная', text:'Найдите производную f(x) = x³ − 3x + 2 в точке x = 1:', options:['0','1','−3','2'], correct:0 },
+        { topic:'Тригонометрия', text:'Чему равен sin(π/6)?', options:['√3 / 2','1 / 2','√2 / 2','1'], correct:1 },
+        { topic:'Логарифмы', text:'Вычислите: log₂(32)', options:['4','5','6','16'], correct:1 },
+        { topic:'Уравнения', text:'Найдите больший корень уравнения: 2x² − 5x + 2 = 0', options:['1/2','1','2','5/2'], correct:2 },
+        { topic:'Геометрия', text:'Диагональ квадрата равна 6√2. Найдите площадь квадрата:', options:['18','36','12','72'], correct:1 },
+        { topic:'Вероятность', text:'Монету бросают дважды. Вероятность выпадения двух орлов:', options:['1/4','1/2','3/4','1/8'], correct:0 },
+        { topic:'Прогрессии', text:'Первый член геометрической прогрессии равен 3, знаменатель — 2. Найдите 5-й член:', options:['24','48','12','96'], correct:1 },
+        { topic:'Функции', text:'Функция y = x² − 4x + 3 убывает при:', options:['x > 2','x < 2','x > 4','x < 0'], correct:1 },
+        { topic:'Стереометрия', text:'Объём куба со стороной 3 равен:', options:['9','27','18','81'], correct:1 },
+        { topic:'Интегралы', text:'Вычислите: ∫₀² 2x dx', options:['2','4','8','1'], correct:1 },
+      ],
+      'ege-russian': [
+        { topic:'Орфография', text:'В каком ряду все слова пишутся с приставкой ПРЕ-?', options:['пр..красный, пр..следовать, пр..брежный','пр..думать, пр..лежать, пр..бор','пр..задуматься, пр..беречь, пр..молчать','пр..образить, пр..возмочь, пр..одолеть'], correct:0 },
+        { topic:'Пунктуация', text:'Сколько запятых нужно в предложении: «Книга которую я читал вчера оказалась очень интересной»?', options:['1','2','3','0'], correct:1 },
+        { topic:'Лексика', text:'В каком предложении слово «представить» употреблено в значении «познакомить»?', options:['Он представил нас своим друзьям.','Представьте себе моё удивление.','Это трудно представить.','Он представлял угрозу.'], correct:0 },
+        { topic:'Грамматика', text:'Укажите пример с ошибкой в образовании формы слова:', options:['более красивее','пятеро студентов','в полутора метрах','к обоим берегам'], correct:0 },
+        { topic:'Текст', text:'К какому типу речи относится текст с последовательным изложением событий во времени?', options:['Описание','Рассуждение','Повествование','Определение'], correct:2 },
+        { topic:'Выразительность', text:'Какое средство выразительности использовано: «Вся комната янтарным блеском озарена»?', options:['Метафора','Олицетворение','Эпитет','Сравнение'], correct:2 },
+        { topic:'Орфография', text:'В каком слове пишется Ъ?', options:['вьюга','съёмка','разъяснить','пьеса'], correct:2 },
+        { topic:'Пунктуация', text:'В каком предложении выделенное слово является вводным?', options:['Кажется, он пришёл.','Он кажется умным.','Это кажется невозможным.','Мне кажется правильным.'], correct:0 },
+        { topic:'Лексика', text:'Что такое паронимы?', options:['Слова с противоположным значением','Слова, сходные по звучанию, но разные по значению','Слова, одинаковые по написанию','Устаревшие слова'], correct:1 },
+        { topic:'Стиль', text:'Какое средство связи предложений характерно для научного стиля?', options:['Риторические вопросы','Термины и лексические повторы','Разговорная лексика','Восклицательные предложения'], correct:1 },
+      ],
+    };
+
+    /* Максимальные баллы и пороги оценок */
+    const SCORE_CONFIG = {
+      'oge-math':    { max:32, grade3:8, grade4:15, grade5:22 },
+      'oge-russian': { max:33, grade3:15, grade4:23, grade5:29 },
+      'ege-math':    { max:100, grade3:27, grade4:50, grade5:72 },
+      'ege-russian': { max:100, grade3:36, grade4:60, grade5:80 },
+    };
+
+    /* ═══════════════════════════════════════════════════════
+       STATE
+       ═══════════════════════════════════════════════════════ */
+    const state = {
+      exam: null,
+      subject: null,
+      currentQ: 0,
+      answers: [],   // индекс выбранного варианта (или null)
+      selected: null, // текущий выбранный вариант
+      locked: false,  // заблокированы ли варианты (после подтверждения)
+    };
+
+    /* ═══════════════════════════════════════════════════════
+       NAVIGATION
+       ═══════════════════════════════════════════════════════ */
+    function goTo(stepId) {
+      document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById(stepId);
+      target.classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       STEP 1: EXAM SELECTION
+       ═══════════════════════════════════════════════════════ */
+    function selectExam(exam) {
+      state.exam = exam;
+      document.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
+      document.querySelector(`.choice-card[data-exam="${exam}"]`).classList.add('selected');
+      // Небольшая задержка для анимации выбора
+      setTimeout(() => goTo('step-subject'), 180);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       STEP 2: SUBJECT SELECTION
+       ═══════════════════════════════════════════════════════ */
+    function selectSubject(subject) {
+      state.subject = subject;
+      document.querySelectorAll('.subject-card').forEach(c => c.classList.remove('selected'));
+      document.querySelector(`.subject-card[data-subject="${subject}"]`).classList.add('selected');
+      setTimeout(() => {
+        startDiagnostic();
+        goTo('step-diagnostic');
+      }, 180);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       STEP 3: DIAGNOSTIC
+       ═══════════════════════════════════════════════════════ */
+    function startDiagnostic() {
+      state.currentQ = 0;
+      state.answers = [];
+      state.selected = null;
+      state.locked = false;
+      renderQuestion();
+    }
+
+    function getQuestions() {
+      return QUESTIONS[`${state.exam}-${state.subject}`];
+    }
+
+    function renderQuestion() {
+      const qs = getQuestions();
+      const q  = qs[state.currentQ];
+      const letters = ['А','Б','В','Г'];
+
+      document.getElementById('q-current').textContent = state.currentQ + 1;
+      document.getElementById('diag-bar').style.width = `${((state.currentQ + 1) / 10) * 100}%`;
+      document.getElementById('q-topic').textContent = q.topic;
+      document.getElementById('q-text').textContent  = q.text;
+
+      const list = document.getElementById('options-list');
+      list.innerHTML = '';
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-option';
+        btn.dataset.index = i;
+        btn.innerHTML = `
+          <span class="answer-letter">${letters[i]}</span>
+          <span class="answer-text">${opt}</span>
+        `;
+        btn.addEventListener('click', () => selectAnswer(i));
+        list.appendChild(btn);
+      });
+
+      state.selected = null;
+      state.locked = false;
+      const nextBtn = document.getElementById('btn-next');
+      nextBtn.disabled = true;
+      nextBtn.textContent = state.currentQ === 9 ? 'Посмотреть результат' : 'Следующий вопрос';
+    }
+
+    function selectAnswer(index) {
+      if (state.locked) return;
+      state.selected = index;
+
+      document.querySelectorAll('.answer-option').forEach((btn, i) => {
+        btn.classList.toggle('selected', i === index);
+      });
+
+      document.getElementById('btn-next').disabled = false;
+    }
+
+    function nextQuestion() {
+      if (state.selected === null) return;
+      const qs  = getQuestions();
+      const q   = qs[state.currentQ];
+
+      // Показываем правильно/неправильно
+      state.locked = true;
+      document.querySelectorAll('.answer-option').forEach((btn, i) => {
+        btn.classList.add('locked');
+        if (i === q.correct) {
+          if (state.selected === i) btn.classList.replace('selected', 'correct');
+          else btn.classList.add('revealed');
+        } else if (i === state.selected) {
+          btn.classList.replace('selected', 'incorrect');
+        }
+      });
+
+      // Сохраняем ответ
+      state.answers.push(state.selected);
+      document.getElementById('btn-next').disabled = true;
+
+      // Переход через 700ms
+      setTimeout(() => {
+        if (state.currentQ < 9) {
+          state.currentQ++;
+          renderQuestion();
+        } else {
+          showResults();
+          goTo('step-results');
+        }
+      }, 700);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       STEP 4: RESULTS
+       ═══════════════════════════════════════════════════════ */
+    function showResults() {
+      const qs     = getQuestions();
+      const key    = `${state.exam}-${state.subject}`;
+      const cfg    = SCORE_CONFIG[key];
+
+      // Подсчёт результатов по темам
+      const topicMap = {}; // topic → { correct, total }
+      qs.forEach((q, i) => {
+        if (!topicMap[q.topic]) topicMap[q.topic] = { correct: 0, total: 0 };
+        topicMap[q.topic].total++;
+        if (state.answers[i] === q.correct) topicMap[q.topic].correct++;
+      });
+
+      const correctTotal = state.answers.filter((a, i) => a === qs[i].correct).length;
+      const wrongTotal   = 10 - correctTotal;
+
+      // Прогноз балла
+      const predicted = Math.round((correctTotal / 10) * cfg.max * 0.92);
+
+      // Определяем оценку
+      let gradeLabel, gradeClass;
+      if (predicted >= cfg.grade5)       { gradeLabel = '«Пятёрка» — отличный результат'; gradeClass = 'score-hero__grade--5'; }
+      else if (predicted >= cfg.grade4)  { gradeLabel = '«Четвёрка» — хороший результат'; gradeClass = 'score-hero__grade--4'; }
+      else                               { gradeLabel = '«Тройка» — есть что улучшить'; gradeClass = 'score-hero__grade--3'; }
+
+      document.getElementById('res-score').textContent = predicted;
+      document.getElementById('res-max').textContent   = `из ${cfg.max}`;
+      document.getElementById('res-correct').textContent = correctTotal;
+      document.getElementById('res-wrong').textContent   = wrongTotal;
+
+      const gradeEl = document.getElementById('res-grade');
+      gradeEl.className = `score-hero__grade ${gradeClass}`;
+      gradeEl.textContent = gradeLabel;
+
+      // Слабые/сильные темы
+      const weakTopics   = [];
+      const strongTopics = [];
+
+      Object.entries(topicMap).forEach(([topic, data]) => {
+        const pct = data.correct / data.total;
+        if (pct < 0.6) weakTopics.push({ topic, correct: data.correct, total: data.total });
+        else strongTopics.push({ topic, correct: data.correct, total: data.total });
+      });
+
+      const weakSection = document.getElementById('weak-section');
+      const weakList    = document.getElementById('weak-list');
+      if (weakTopics.length > 0) {
+        weakSection.style.display = 'block';
+        weakList.innerHTML = weakTopics.map(t => `
+          <div class="topic-row">
+            <div class="topic-row__icon topic-row__icon--weak"></div>
+            <div class="topic-row__name">${t.topic}</div>
+            <div class="topic-row__score topic-row__score--weak">${t.correct}/${t.total}</div>
+          </div>
+        `).join('');
+      } else {
+        weakSection.style.display = 'none';
+      }
+
+      const strongSection = document.getElementById('strong-section');
+      const strongList    = document.getElementById('strong-list');
+      if (strongTopics.length > 0) {
+        strongSection.style.display = 'block';
+        strongList.innerHTML = strongTopics.map(t => `
+          <div class="topic-row">
+            <div class="topic-row__icon topic-row__icon--strong"></div>
+            <div class="topic-row__name">${t.topic}</div>
+            <div class="topic-row__score topic-row__score--strong">${t.correct}/${t.total}</div>
+          </div>
+        `).join('');
+      } else {
+        strongSection.style.display = 'none';
+      }
+
+      // Превью для регистрации
+      document.getElementById('reg-score-preview').textContent = `${predicted} из ${cfg.max}`;
+
+      // Сохраняем в sessionStorage
+      try {
+        sessionStorage.setItem('diag_session', JSON.stringify({
+          exam: state.exam,
+          subject: state.subject,
+          score: predicted,
+          maxScore: cfg.max,
+          correct: correctTotal,
+          weakTopics: weakTopics.map(t => t.topic),
+        }));
+      } catch(e) {}
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       STEP 5: REGISTRATION
+       ═══════════════════════════════════════════════════════ */
+    function handleRegister() {
+      const email = document.getElementById('reg-email').value.trim();
+      const pass  = document.getElementById('reg-password').value;
+
+      if (!email || !email.includes('@')) {
+        document.getElementById('reg-email').focus();
+        document.getElementById('reg-email').style.borderColor = 'var(--color-error)';
+        return;
+      }
+      if (pass.length < 8) {
+        document.getElementById('reg-password').focus();
+        document.getElementById('reg-password').style.borderColor = 'var(--color-error)';
+        return;
+      }
+
+      // TODO: подключить Supabase auth
+      // После успешной регистрации → редирект на dashboard
+      window.location.href = 'screen-01-dashboard.html';
+    }
+
+    function handleGoogleAuth() {
+      // TODO: подключить Supabase Google OAuth
+      window.location.href = 'screen-01-dashboard.html';
+    }
+
+    // Сбросить цвет border при фокусе
+    ['reg-email', 'reg-password'].forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener('focus', () => { el.style.borderColor = ''; });
+    });
+
+    /* ═══════════════════════════════════════════════════════
+       EXIT MODAL
+       ═══════════════════════════════════════════════════════ */
+    function showExitModal() {
+      document.getElementById('exit-modal').classList.remove('hidden');
+    }
+    function closeExitModal() {
+      document.getElementById('exit-modal').classList.add('hidden');
+    }
+    function confirmExit() {
+      closeExitModal();
+      state.exam = null; state.subject = null;
+      goTo('step-exam');
+    }
+
+    // Закрытие по клику на backdrop
+    document.getElementById('exit-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeExitModal();
+    });
+
+    // Восстановление из sessionStorage
+    (function restoreSession() {
+      try {
+        const saved = sessionStorage.getItem('diag_session');
+        if (saved) {
+          const data = JSON.parse(saved);
+          state.exam    = data.exam;
+          state.subject = data.subject;
+        }
+      } catch(e) {}
+    })();
+  </script>
+</body>
+</html>

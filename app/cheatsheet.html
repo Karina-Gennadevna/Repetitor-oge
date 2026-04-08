@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Шпаргалка — Репетитор ОГЭ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0D0F11;
+      --bg-1:         #111318;
+      --bg-2:         #161920;
+      --bg-3:         #1C1F27;
+      --border:       rgba(255,255,255,0.07);
+      --border-2:     rgba(255,255,255,0.12);
+      --text:         #F1F5F9;
+      --text-2:       #E2E8F0;
+      --text-muted:   #94A3B8;
+      --text-dim:     #4E5A6E;
+      --accent:       #6366F1;
+      --accent-light: #818CF8;
+      --accent-bg:    rgba(99,102,241,0.1);
+      --accent-bd:    rgba(99,102,241,0.3);
+      --error:        #F87171;
+      --error-bg:     rgba(248,113,113,0.08);
+      --error-bd:     rgba(248,113,113,0.25);
+      --amber:        #F59E0B;
+      --amber-bg:     rgba(245,158,11,0.08);
+      --amber-bd:     rgba(245,158,11,0.25);
+      --green:        #34D399;
+      --green-bg:     rgba(52,211,153,0.08);
+      --green-bd:     rgba(52,211,153,0.25);
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      position: sticky;
+      top: 0;
+      background: rgba(13,15,17,0.96);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .back-btn:hover { border-color: var(--border-2); color: var(--text); }
+    .back-btn svg { width: 16px; height: 16px; }
+
+    .header-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-2);
+      letter-spacing: -0.01em;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .subject-chip {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-light);
+      background: var(--accent-bg);
+      border: 1px solid var(--accent-bd);
+      border-radius: 20px;
+      padding: 4px 12px;
+    }
+
+    /* ─── PAGE ─── */
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 28px 24px 64px;
+    }
+
+    /* ─── PAGE HEADER ─── */
+    .page-head {
+      margin-bottom: 28px;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .page-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* ─── FILTERS ─── */
+    .filters {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .filter-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-right: 2px;
+      white-space: nowrap;
+    }
+
+    .filter-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: var(--bg-1);
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.18s;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .chip:hover { border-color: var(--border-2); color: var(--text); }
+
+    .chip .chip-count {
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--bg-3);
+      border-radius: 20px;
+      padding: 1px 7px;
+      color: var(--text-dim);
+    }
+
+    .chip.active-all {
+      border-color: var(--accent-bd);
+      background: var(--accent-bg);
+      color: var(--accent-light);
+    }
+    .chip.active-all .chip-count { background: var(--accent-bg); color: var(--accent-light); }
+
+    .chip.active-struggling {
+      border-color: var(--error-bd);
+      background: var(--error-bg);
+      color: var(--error);
+    }
+    .chip.active-struggling .chip-count { background: var(--error-bg); color: var(--error); }
+
+    .chip.active-understood {
+      border-color: var(--amber-bd);
+      background: var(--amber-bg);
+      color: var(--amber);
+    }
+    .chip.active-understood .chip-count { background: var(--amber-bg); color: var(--amber); }
+
+    .chip.active-mastered {
+      border-color: var(--green-bd);
+      background: var(--green-bg);
+      color: var(--green);
+    }
+    .chip.active-mastered .chip-count { background: var(--green-bg); color: var(--green); }
+
+    /* dot in chip */
+    .chip-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ─── EMPTY STATE ─── */
+    .empty-state {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-dim);
+      font-size: 15px;
+    }
+
+    .empty-state svg { margin-bottom: 16px; opacity: 0.4; }
+
+    /* ─── CARDS GRID ─── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    /* ─── CARD ─── */
+    .card {
+      background: var(--bg-1);
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      border-color: var(--border-2);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+    }
+
+    .card[data-status="struggling"] { border-color: var(--error-bd); }
+    .card[data-status="understood"] { border-color: var(--amber-bd); }
+    .card[data-status="mastered"]   { border-color: var(--green-bd); }
+
+    /* Card header */
+    .card-head {
+      padding: 18px 20px 14px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-topic {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .status-badge {
+      flex-shrink: 0;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 20px;
+      padding: 4px 10px;
+      white-space: nowrap;
+    }
+
+    .status-badge.struggling {
+      background: var(--error-bg);
+      color: var(--error);
+      border: 1px solid var(--error-bd);
+    }
+    .status-badge.understood {
+      background: var(--amber-bg);
+      color: var(--amber);
+      border: 1px solid var(--amber-bd);
+    }
+    .status-badge.mastered {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid var(--green-bd);
+    }
+
+    /* Card sections */
+    .card-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 20px;
+    }
+
+    .card-section {
+      padding: 14px 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .section-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .section-icon svg { width: 13px; height: 13px; }
+
+    .icon-error { background: var(--error-bg); color: var(--error); }
+    .icon-rule  { background: var(--accent-bg); color: var(--accent-light); }
+    .icon-example { background: var(--green-bg); color: var(--green); }
+
+    .section-content { flex: 1; min-width: 0; }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      margin-bottom: 5px;
+    }
+
+    .section-text {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .section-text strong { color: var(--text-2); }
+
+    .example-block {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      color: var(--text-2);
+      line-height: 1.7;
+      white-space: pre-wrap;
+      margin-top: 6px;
+    }
+
+    /* Card footer */
+    .card-footer {
+      padding: 14px 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: auto;
+    }
+
+    .status-switcher {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 5px;
+    }
+
+    .status-btn {
+      padding: 7px 4px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--bg-2);
+      color: var(--text-dim);
+      font-size: 11.5px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.18s;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .status-btn:hover { border-color: var(--border-2); color: var(--text-muted); }
+
+    .status-btn.active.struggling {
+      background: var(--error-bg);
+      border-color: var(--error-bd);
+      color: var(--error);
+    }
+    .status-btn.active.understood {
+      background: var(--amber-bg);
+      border-color: var(--amber-bd);
+      color: var(--amber);
+    }
+    .status-btn.active.mastered {
+      background: var(--green-bg);
+      border-color: var(--green-bd);
+      color: var(--green);
+    }
+
+    .btn-train {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      font-size: 13.5px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .btn-train:hover {
+      background: var(--accent-light);
+      transform: translateY(-1px);
+    }
+
+    .btn-train svg { width: 14px; height: 14px; transition: transform 0.2s; }
+    .btn-train:hover svg { transform: translateX(3px); }
+
+    /* ─── PROGRESS BAR ─── */
+    .progress-wrap {
+      margin-bottom: 28px;
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .progress-stats {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .prog-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 60px;
+    }
+
+    .prog-stat-val {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    .prog-stat-val.red    { color: var(--error); }
+    .prog-stat-val.amber  { color: var(--amber); }
+    .prog-stat-val.green  { color: var(--green); }
+
+    .prog-stat-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .progress-bar-wrap {
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .progress-bar-track {
+      height: 6px;
+      border-radius: 3px;
+      background: var(--bg-3);
+      overflow: hidden;
+      display: flex;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    .fill-red   { background: var(--error); }
+    .fill-amber { background: var(--amber); }
+    .fill-green { background: var(--green); }
+
+    .progress-bar-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 600px) {
+      .page { padding: 20px 16px 48px; }
+      .header { padding: 0 16px; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .progress-wrap { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .progress-bar-wrap { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <a class="back-btn" href="../index.html" title="На главную">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </a>
+      <div class="header-title">Шпаргалка</div>
+    </div>
+    <div class="header-right">
+      <div class="subject-chip" id="subjectChip">Математика</div>
+    </div>
+  </header>
+
+  <!-- PAGE -->
+  <div class="page">
+
+    <div class="page-head">
+      <h1 class="page-title">Твои слабые темы</h1>
+      <p class="page-sub" id="pageSubtitle">7 тем — разбери каждую и переведи в «Усвоил»</p>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="progress-wrap">
+      <div class="progress-stats">
+        <div class="prog-stat">
+          <div class="prog-stat-val red" id="countStruggling">0</div>
+          <div class="prog-stat-label">Ошибаюсь</div>
+        </div>
+        <div class="prog-stat">
+          <div class="prog-stat-val amber" id="countUnderstood">0</div>
+          <div class="prog-stat-label">Разобрался</div>
+        </div>
+        <div class="prog-stat">
+          <div class="prog-stat-val green" id="countMastered">0</div>
+          <div class="prog-stat-label">Усвоил</div>
+        </div>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill fill-red"   id="barRed"   style="width:0%"></div>
+          <div class="progress-bar-fill fill-amber" id="barAmber" style="width:0%"></div>
+          <div class="progress-bar-fill fill-green" id="barGreen" style="width:0%"></div>
+        </div>
+        <div class="progress-bar-label" id="barLabel">Двигайся к 100% усвоенных</div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters">
+      <span class="filter-label">Фильтр:</span>
+      <div class="filter-chips">
+        <button class="chip active-all" data-filter="all" onclick="setFilter('all')">
+          Все <span class="chip-count" id="fc-all">7</span>
+        </button>
+        <button class="chip" data-filter="struggling" onclick="setFilter('struggling')">
+          <span class="chip-dot" style="background:var(--error)"></span>
+          Ошибаюсь <span class="chip-count" id="fc-struggling">0</span>
+        </button>
+        <button class="chip" data-filter="understood" onclick="setFilter('understood')">
+          <span class="chip-dot" style="background:var(--amber)"></span>
+          Разобрался <span class="chip-count" id="fc-understood">0</span>
+        </button>
+        <button class="chip" data-filter="mastered" onclick="setFilter('mastered')">
+          <span class="chip-dot" style="background:var(--green)"></span>
+          Усвоил <span class="chip-count" id="fc-mastered">0</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div class="empty-state" id="emptyState">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9 9h.01M15 9h.01M9.5 14.5s1 1.5 2.5 1.5 2.5-1.5 2.5-1.5" stroke-linecap="round"/>
+      </svg>
+      <div>В этом разделе пока нет карточек</div>
+    </div>
+
+    <!-- CARDS -->
+    <div class="cards-grid" id="cardsGrid"></div>
+
+  </div>
+
+  <script>
+    /* ══════════════════════════════════════════
+       DATA
+    ══════════════════════════════════════════ */
+
+    const CARDS_DATA = [
+      {
+        id: 'fractions-add',
+        subject: 'math',
+        topic: 'Сложение и вычитание дробей',
+        error: 'Складываю числители и знаменатели по отдельности:\n1/2 + 1/3 = 2/5 ✗',
+        rule: 'Нужно привести к общему знаменателю, и только потом складывать числители. Знаменатель при этом не меняется.',
+        example: '1/2 + 1/3\n= 3/6 + 2/6\n= 5/6  ✓',
+      },
+      {
+        id: 'equations-sign',
+        subject: 'math',
+        topic: 'Решение уравнений',
+        error: 'При переносе слагаемого через «=» забываю менять знак:\n3x + 5 = 14 → 3x = 14 + 5 ✗',
+        rule: 'При переносе слагаемого на другую сторону знак меняется на противоположный. Это эквивалентно вычитанию из обеих частей.',
+        example: '3x + 5 = 14\n3x = 14 − 5\n3x = 9\nx = 3  ✓',
+      },
+      {
+        id: 'powers-multiply',
+        subject: 'math',
+        topic: 'Умножение степеней',
+        error: 'При умножении степеней с одним основанием перемножаю показатели:\n2³ · 2⁴ = 2¹²  ✗',
+        rule: 'aⁿ · aᵐ = aⁿ⁺ᵐ — показатели складываются, основание остаётся тем же.',
+        example: '2³ · 2⁴ = 2^(3+4) = 2⁷ = 128  ✓\n\nНо: (2³)⁴ = 2^(3·4) = 2¹²  (это другое правило)',
+      },
+      {
+        id: 'percents',
+        subject: 'math',
+        topic: 'Проценты',
+        error: 'Путаю «X% от числа» и «увеличить на X%».\n15% от 200 ≠ 200 + 15',
+        rule: 'X% от числа N = N · X / 100\nУвеличить N на X% = N · (1 + X/100)\nУменьшить N на X% = N · (1 − X/100)',
+        example: '15% от 200 = 200 · 15/100 = 30\n\n200 увеличить на 15%\n= 200 · 1,15 = 230  ✓',
+      },
+      {
+        id: 'pythagoras',
+        subject: 'math',
+        topic: 'Теорема Пифагора',
+        error: 'Применяю к любому треугольнику, а не только к прямоугольному. И путаю катеты и гипотенузу.',
+        rule: 'Работает только для прямоугольного треугольника.\na² + b² = c², где c — гипотенуза (сторона напротив прямого угла, всегда самая длинная).',
+        example: 'Катеты: a = 3, b = 4\nГипотенуза: c = √(9 + 16) = √25 = 5  ✓\n\nПроверка: 3² + 4² = 9 + 16 = 25 = 5²',
+      },
+      {
+        id: 'probability',
+        subject: 'math',
+        topic: 'Вероятность',
+        error: 'Путаю число исходов события с числом всех исходов. Не учитываю, что исходы должны быть равновозможными.',
+        rule: 'P(A) = m / n, где\nm — число благоприятных исходов\nn — число всех равновозможных исходов\nРезультат всегда от 0 до 1.',
+        example: 'В корзине 3 красных и 7 синих шара:\nn = 10, m = 3\nP(красный) = 3/10 = 0,3  ✓',
+      },
+      {
+        id: 'function-value',
+        subject: 'math',
+        topic: 'Значение функции',
+        error: 'Подставляю число только частично или в показатель, а не во всё выражение целиком.',
+        rule: 'f(a) — подставить a вместо каждого x во всю запись функции, не пропуская ни один член.',
+        example: 'f(x) = x² − 2x + 1\n\nf(3) = 3² − 2·3 + 1\n     = 9 − 6 + 1\n     = 4  ✓',
+      },
+    ];
+
+    const STORAGE_KEY = 'cheatsheet_statuses';
+
+    /* ══════════════════════════════════════════
+       STATE
+    ══════════════════════════════════════════ */
+
+    let statuses = {};
+    let activeFilter = 'all';
+
+    // Load statuses from localStorage
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) statuses = JSON.parse(saved);
+    } catch(e) {}
+
+    // Default all cards to 'struggling'
+    CARDS_DATA.forEach(c => {
+      if (!statuses[c.id]) statuses[c.id] = 'struggling';
+    });
+
+    function saveStatuses() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(statuses)); } catch(e) {}
+    }
+
+    /* ══════════════════════════════════════════
+       RENDER
+    ══════════════════════════════════════════ */
+
+    function renderAll() {
+      renderCards();
+      updateProgress();
+      updateFilterCounts();
+    }
+
+    function renderCards() {
+      const grid = document.getElementById('cardsGrid');
+      grid.innerHTML = '';
+
+      let visible = 0;
+
+      CARDS_DATA.forEach(card => {
+        const status = statuses[card.id] || 'struggling';
+        const show = activeFilter === 'all' || activeFilter === status;
+
+        if (!show) return;
+        visible++;
+        grid.appendChild(buildCard(card, status));
+      });
+
+      document.getElementById('emptyState').style.display = visible === 0 ? 'block' : 'none';
+    }
+
+    function buildCard(card, status) {
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.dataset.id = card.id;
+      el.dataset.status = status;
+
+      const statusLabels = { struggling: 'Ошибаюсь', understood: 'Разобрался', mastered: 'Усвоил' };
+
+      el.innerHTML = `
+        <div class="card-head">
+          <div class="card-topic">${card.topic}</div>
+          <div class="status-badge ${status}" id="badge_${card.id}">${statusLabels[status]}</div>
+        </div>
+
+        <div class="card-divider"></div>
+
+        <div class="card-section">
+          <div class="section-icon icon-error">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+          </div>
+          <div class="section-content">
+            <div class="section-label">Типичная ошибка</div>
+            <div class="section-text" style="white-space:pre-line">${card.error}</div>
+          </div>
+        </div>
+
+        <div class="card-divider"></div>
+
+        <div class="card-section">
+          <div class="section-icon icon-rule">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 8v4M12 16h.01"/>
+            </svg>
+          </div>
+          <div class="section-content">
+            <div class="section-label">Правило</div>
+            <div class="section-text">${card.rule}</div>
+          </div>
+        </div>
+
+        <div class="card-section">
+          <div class="section-icon icon-example">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+          </div>
+          <div class="section-content">
+            <div class="section-label">Пример</div>
+            <div class="example-block">${card.example}</div>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <div class="status-switcher">
+            <button class="status-btn struggling ${status === 'struggling' ? 'active' : ''}"
+              onclick="setStatus('${card.id}', 'struggling')">Ошибаюсь</button>
+            <button class="status-btn understood ${status === 'understood' ? 'active' : ''}"
+              onclick="setStatus('${card.id}', 'understood')">Разобрался</button>
+            <button class="status-btn mastered ${status === 'mastered' ? 'active' : ''}"
+              onclick="setStatus('${card.id}', 'mastered')">Усвоил</button>
+          </div>
+          <button class="btn-train" onclick="trainTopic('${card.subject}', '${card.id}')">
+            Тренировать
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <path d="M5 12h14M13 6l6 6-6 6"/>
+            </svg>
+          </button>
+        </div>
+      `;
+
+      return el;
+    }
+
+    /* ══════════════════════════════════════════
+       ACTIONS
+    ══════════════════════════════════════════ */
+
+    function setStatus(cardId, newStatus) {
+      statuses[cardId] = newStatus;
+      saveStatuses();
+
+      // Re-render card in place
+      const card = CARDS_DATA.find(c => c.id === cardId);
+      if (!card) return;
+
+      const cardEl = document.querySelector(`.card[data-id="${cardId}"]`);
+      if (!cardEl) return;
+
+      cardEl.dataset.status = newStatus;
+
+      // Update badge
+      const statusLabels = { struggling: 'Ошибаюсь', understood: 'Разобрался', mastered: 'Усвоил' };
+      const badge = cardEl.querySelector('.status-badge');
+      badge.className = `status-badge ${newStatus}`;
+      badge.textContent = statusLabels[newStatus];
+
+      // Update switcher buttons
+      cardEl.querySelectorAll('.status-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.classList.contains(newStatus)) btn.classList.add('active');
+      });
+
+      // If filtered, hide card if no longer matches
+      if (activeFilter !== 'all' && activeFilter !== newStatus) {
+        cardEl.style.opacity = '0';
+        cardEl.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          cardEl.style.display = 'none';
+          checkEmpty();
+        }, 250);
+      }
+
+      updateProgress();
+      updateFilterCounts();
+    }
+
+    function setFilter(filter) {
+      activeFilter = filter;
+
+      // Update chip styles
+      document.querySelectorAll('.chip').forEach(chip => {
+        chip.className = 'chip';
+        if (chip.dataset.filter === filter) chip.classList.add(`active-${filter}`);
+      });
+
+      renderCards();
+    }
+
+    function checkEmpty() {
+      const grid = document.getElementById('cardsGrid');
+      const visible = grid.querySelectorAll('.card:not([style*="display: none"])').length;
+      document.getElementById('emptyState').style.display = visible === 0 ? 'block' : 'none';
+    }
+
+    function trainTopic(subject, cardId) {
+      window.location.href = `exam.html?subject=${subject}&mode=block`;
+    }
+
+    /* ══════════════════════════════════════════
+       COUNTERS
+    ══════════════════════════════════════════ */
+
+    function countsByStatus() {
+      const counts = { struggling: 0, understood: 0, mastered: 0 };
+      CARDS_DATA.forEach(c => {
+        const s = statuses[c.id] || 'struggling';
+        counts[s]++;
+      });
+      return counts;
+    }
+
+    function updateProgress() {
+      const counts = countsByStatus();
+      const total  = CARDS_DATA.length;
+
+      document.getElementById('countStruggling').textContent = counts.struggling;
+      document.getElementById('countUnderstood').textContent = counts.understood;
+      document.getElementById('countMastered').textContent   = counts.mastered;
+
+      const pRed   = counts.struggling / total * 100;
+      const pAmber = counts.understood / total * 100;
+      const pGreen = counts.mastered   / total * 100;
+
+      document.getElementById('barRed').style.width   = pRed   + '%';
+      document.getElementById('barAmber').style.width = pAmber + '%';
+      document.getElementById('barGreen').style.width = pGreen + '%';
+
+      const pct = Math.round(pGreen);
+      document.getElementById('barLabel').textContent =
+        pct === 100 ? '🎉 Все темы усвоены!' :
+        pct > 0     ? `${pct}% тем усвоено` :
+                      'Двигайся к 100% усвоенных';
+
+      const remaining = counts.struggling + counts.understood;
+      document.getElementById('pageSubtitle').textContent =
+        remaining === 0
+          ? 'Отлично — все темы усвоены!'
+          : `${total} тем — разбери каждую и переведи в «Усвоил»`;
+    }
+
+    function updateFilterCounts() {
+      const counts = countsByStatus();
+      document.getElementById('fc-all').textContent        = CARDS_DATA.length;
+      document.getElementById('fc-struggling').textContent = counts.struggling;
+      document.getElementById('fc-understood').textContent = counts.understood;
+      document.getElementById('fc-mastered').textContent   = counts.mastered;
+    }
+
+    /* ══════════════════════════════════════════
+       INIT
+    ══════════════════════════════════════════ */
+
+    renderAll();
+  </script>
+</body>
+</html>
