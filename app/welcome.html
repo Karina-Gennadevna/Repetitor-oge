@@ -252,40 +252,37 @@
       padding: 12px 14px;
     }
 
-    .forecast__icon {
-      width: 32px;
-      height: 32px;
-      background: var(--accent-dim);
+    .forecast__list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .forecast__item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .forecast__item-icon {
+      width: 28px;
+      height: 28px;
       border-radius: 8px;
+      background: var(--accent-dim);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 14px;
       flex-shrink: 0;
-    }
-
-    .forecast__pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
-
-    .forecast__pill {
-      background: rgba(42, 171, 179, 0.1);
-      border: 1px solid rgba(42, 171, 179, 0.2);
-      border-radius: 20px;
-      padding: 3px 10px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--accent);
-      white-space: nowrap;
     }
 
     .forecast__caption {
       font-size: 12px;
       color: var(--text-muted);
-      line-height: 1.4;
+      margin-top: 10px;
     }
 
     /* Действия */
@@ -440,15 +437,21 @@
       </div>
 
       <div class="exam-card__forecast">
-        <div class="forecast__icon">📊</div>
-        <div>
-          <div class="forecast__pills">
-            <span class="forecast__pill">🎯 Прогноз оценки</span>
-            <span class="forecast__pill">📉 Слабые темы</span>
-            <span class="forecast__pill">📘 План подготовки</span>
+        <div class="forecast__list">
+          <div class="forecast__item">
+            <div class="forecast__item-icon">🎯</div>
+            Прогноз оценки
           </div>
-          <div class="forecast__caption">Сразу после завершения диагностики</div>
+          <div class="forecast__item">
+            <div class="forecast__item-icon">📉</div>
+            Слабые темы
+          </div>
+          <div class="forecast__item">
+            <div class="forecast__item-icon">📘</div>
+            План подготовки
+          </div>
         </div>
+        <div class="forecast__caption">Сразу после завершения диагностики</div>
       </div>
     </div>
   </div>
