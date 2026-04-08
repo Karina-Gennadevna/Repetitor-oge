@@ -243,46 +243,53 @@
     }
 
     .exam-card__forecast {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(42, 171, 179, 0.07);
-      border: 1px solid rgba(42, 171, 179, 0.18);
+      background: rgba(42, 171, 179, 0.06);
+      border: 1px solid rgba(42, 171, 179, 0.15);
       border-radius: 12px;
-      padding: 12px 14px;
+      padding: 14px 16px;
+    }
+
+    .forecast__label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
     }
 
     .forecast__list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
 
     .forecast__item {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       font-size: 13px;
       font-weight: 500;
-      color: var(--text);
+      color: var(--text-soft);
+      line-height: 1;
     }
 
-    .forecast__item-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      background: var(--accent-dim);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
+    .forecast__item::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.7;
       flex-shrink: 0;
     }
 
     .forecast__caption {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-muted);
       margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.05);
     }
 
     /* Действия */
@@ -437,19 +444,11 @@
       </div>
 
       <div class="exam-card__forecast">
+        <div class="forecast__label">Ты получишь</div>
         <div class="forecast__list">
-          <div class="forecast__item">
-            <div class="forecast__item-icon">🎯</div>
-            Прогноз оценки
-          </div>
-          <div class="forecast__item">
-            <div class="forecast__item-icon">📉</div>
-            Слабые темы
-          </div>
-          <div class="forecast__item">
-            <div class="forecast__item-icon">📘</div>
-            План подготовки
-          </div>
+          <div class="forecast__item">Прогноз оценки</div>
+          <div class="forecast__item">Разбор слабых тем</div>
+          <div class="forecast__item">Персональный план подготовки</div>
         </div>
         <div class="forecast__caption">Сразу после завершения диагностики</div>
       </div>
