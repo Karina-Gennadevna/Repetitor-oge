@@ -514,10 +514,14 @@
     <a href="exam-trial.html" class="btn-secondary">Пройти пробник ещё раз</a>
   </div>
 
-  <!-- Разбор ошибок -->
-  <div id="mistakesSection" style="display:none; margin-top:32px;">
-    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;">Разбор ошибок</div>
-    <div id="mistakesList" style="display:flex;flex-direction:column;gap:12px;"></div>
+  <!-- AI-анализ -->
+  <div id="aiSection" style="margin-top:32px;">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;">Разбор от ИИ</div>
+    <div id="aiLoading" style="background:#13171F;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:24px;text-align:center;color:#7A8899;font-size:14px;">
+      <div style="margin-bottom:8px;font-size:22px;">🤖</div>
+      Анализирую твои ответы…
+    </div>
+    <div id="aiContent" style="display:none;flex-direction:column;gap:12px;"></div>
   </div>
 
   <div class="footer-space"></div>
@@ -682,40 +686,85 @@
     }
 
     // ─── Анимации после загрузки ───
-    // ─── Разбор ошибок ───
-    (function renderMistakes() {
+    // ─── AI-анализ ───
+    (async function runAI() {
       try {
         const result = JSON.parse(localStorage.getItem('trial_result') || '{}');
         const questions = JSON.parse(localStorage.getItem('trial_questions') || '[]');
-        if (!questions.length || !result.answers) return;
+        if (!questions.length || !result.answers) {
+          document.getElementById('aiLoading').textContent = 'Нет данных для анализа.';
+          return;
+        }
 
-        const letters = ['А', 'Б', 'В', 'Г'];
-        const mistakes = questions.map((q, i) => ({ q, i, given: result.answers[i] }))
-          .filter(({ q, given }) => given !== q.correct);
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            questions,
+            answers: result.answers,
+            score: result.score,
+            total: result.total
+          })
+        });
 
-        if (!mistakes.length) return;
+        if (!response.ok) throw new Error('API error');
+        const ai = await response.json();
 
-        const list = document.getElementById('mistakesList');
-        list.innerHTML = mistakes.map(({ q, i, given }) => `
-          <div style="background:#13171F;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:16px;font-size:14px;">
-            <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#2AABB3;margin-bottom:8px;">Задание ${i + 1} · ${q.tag}</div>
-            <div style="color:#F1F5F9;margin-bottom:12px;line-height:1.5;">${q.text}</div>
-            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
-              <div style="display:flex;justify-content:space-between;padding:8px 12px;background:rgba(232,132,90,0.08);border:1px solid rgba(232,132,90,0.25);border-radius:8px;color:#E8845A;">
-                <span>Твой ответ: ${letters[given]} — ${q.options[given]}</span>
-                <span>✗</span>
+        document.getElementById('aiLoading').style.display = 'none';
+        const content = document.getElementById('aiContent');
+        content.style.display = 'flex';
+
+        let html = '';
+
+        // Итог
+        html += `<div style="background:#13171F;border:1px solid rgba(42,171,179,0.25);border-radius:14px;padding:18px;">
+          <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#2AABB3;margin-bottom:10px;">Общая оценка</div>
+          <div style="font-size:14px;color:#F1F5F9;line-height:1.6;">${ai.summary}</div>
+        </div>`;
+
+        // Ошибки
+        if (ai.mistakes && ai.mistakes.length > 0) {
+          html += ai.mistakes.map(m => `
+            <div style="background:#13171F;border:1px solid rgba(232,132,90,0.2);border-radius:14px;padding:18px;">
+              <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#E8845A;margin-bottom:10px;">Ошибка · ${m.topic}</div>
+              <div style="font-size:14px;color:#F1F5F9;line-height:1.6;margin-bottom:10px;">${m.what_went_wrong}</div>
+              <div style="font-size:13px;color:#94A3B8;line-height:1.6;padding:10px 12px;background:rgba(74,186,122,0.06);border-radius:8px;border:1px solid rgba(74,186,122,0.15);">
+                <strong style="color:#4ABA7A;">Как правильно:</strong> ${m.how_to_fix}
               </div>
-              <div style="display:flex;justify-content:space-between;padding:8px 12px;background:rgba(74,186,122,0.08);border:1px solid rgba(74,186,122,0.25);border-radius:8px;color:#4ABA7A;">
-                <span>Верно: ${letters[q.correct]} — ${q.options[q.correct]}</span>
-                <span>✓</span>
-              </div>
+              ${m.lost_points ? `<div style="margin-top:8px;font-size:12px;color:#7A8899;">${m.lost_points}</div>` : ''}
             </div>
-            <div style="color:#94A3B8;line-height:1.6;font-size:13px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);">${q.explanation}</div>
-          </div>
-        `).join('');
+          `).join('');
+        }
 
-        document.getElementById('mistakesSection').style.display = 'block';
-      } catch(e) {}
+        // План
+        if (ai.plan && ai.plan.length > 0) {
+          html += `<div style="background:#13171F;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:18px;">
+            <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#2AABB3;margin-bottom:14px;">План занятий</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              ${ai.plan.map((p, i) => `
+                <div style="display:flex;gap:12px;align-items:flex-start;">
+                  <div style="width:24px;height:24px;border-radius:7px;background:rgba(42,171,179,0.15);border:1px solid rgba(42,171,179,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#2AABB3;flex-shrink:0;">${i+1}</div>
+                  <div>
+                    <div style="font-size:14px;font-weight:600;color:#F1F5F9;margin-bottom:3px;">${p.topic}</div>
+                    <div style="font-size:13px;color:#94A3B8;line-height:1.5;">${p.action}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>`;
+        }
+
+        // Мотивация
+        if (ai.motivation) {
+          html += `<div style="background:rgba(42,171,179,0.08);border:1px solid rgba(42,171,179,0.2);border-radius:14px;padding:16px;font-size:14px;color:#F1F5F9;line-height:1.6;text-align:center;">
+            💡 ${ai.motivation}
+          </div>`;
+        }
+
+        content.innerHTML = html;
+      } catch(e) {
+        document.getElementById('aiLoading').innerHTML = '<div style="color:#E8845A;">Не удалось загрузить анализ. Попробуй обновить страницу.</div>';
+      }
     })();
 
     window.addEventListener('load', () => {
