@@ -1599,6 +1599,17 @@
   </div>
 </footer>
 
+<!-- ─── Back to top ─── -->
+<button id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Наверх" style="
+  position:fixed; bottom:24px; right:24px; z-index:300;
+  width:44px; height:44px; border-radius:50%;
+  background:var(--bg-elevated); border:1px solid var(--border-light);
+  color:var(--text-secondary); font-size:20px; cursor:pointer;
+  display:none; align-items:center; justify-content:center;
+  box-shadow:0 4px 16px rgba(0,0,0,.4);
+  transition:opacity .2s, background .15s;
+">↑</button>
+
 <!-- ─── Toast ─── -->
 <div class="toast" id="toast">
   <span class="toast__icon">✓</span>
@@ -1606,6 +1617,11 @@
 </div>
 
 <script>
+  const backTop = document.getElementById('back-top');
+  window.addEventListener('scroll', () => {
+    backTop.style.display = window.scrollY > 400 ? 'flex' : 'none';
+  });
+
   function scrollToReg() {
     document.getElementById('register').scrollIntoView({ behavior: 'smooth', block: 'start' });
     setTimeout(() => document.getElementById('reg-name').focus(), 600);
