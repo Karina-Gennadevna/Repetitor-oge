@@ -755,18 +755,20 @@
     }
 
     function selectOption(idx) {
-      if (mode !== 'question') return;
       selected = idx;
       answers[current] = idx;
       document.querySelectorAll('.option').forEach((el, i) => {
         el.classList.toggle('selected', i === idx);
       });
+      // Отмечаем точку прогресса сразу при выборе
+      const isCorrect = idx === QUESTIONS[current].correct;
+      const dot = document.getElementById(`dot-${current}`);
+      if (dot) dot.className = 'progress-dot ' + (isCorrect ? 'done' : 'wrong');
       updateNextBtn();
     }
 
     function updateNextBtn() {
       const btn = document.getElementById('btnNext');
-      if (mode === 'feedback') return;
       const isLast = current === TOTAL - 1;
       btn.textContent = isLast ? 'Завершить →' : 'Далее →';
       btn.classList.toggle('active', selected !== null);
@@ -787,26 +789,14 @@
     }
 
     function handleNextBtn() {
-      if (mode === 'question') {
-        if (selected === null) return;
-        showFeedback();
+      if (selected === null) return;
+      if (current < TOTAL - 1) {
+        current++;
+        selected = answers[current];
+        animateQuestion();
+        renderQuestion();
       } else {
-        // режим feedback — переходим к следующему
-        if (current < TOTAL - 1) {
-          current++;
-          selected = answers[current];
-          mode = 'question';
-
-          document.getElementById('feedbackSection').style.display = 'none';
-          document.getElementById('optionsContainer').style.display = '';
-          document.getElementById('btnSkip').style.display = '';
-          document.getElementById('microNote').textContent = 'Не переживай — ошибки помогут определить слабые темы';
-
-          animateQuestion();
-          renderQuestion();
-        } else {
-          finish();
-        }
+        finish();
       }
     }
 
@@ -928,6 +918,7 @@
         timeSpent
       };
       localStorage.setItem('trial_result', JSON.stringify(state));
+      localStorage.setItem('trial_questions', JSON.stringify(QUESTIONS));
       window.location.href = 'result-trial.html';
     }
 
